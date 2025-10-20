@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import CatalogHierarchicalV2 from './CatalogHierarchicalV2';
 import ProductPage from './ProductPage';
@@ -7,9 +7,23 @@ import api from '../services/api';
 import type { ProductDetailsData } from '../hooks/useProductDetails';
 import { parseProductUrl, buildProductUrl } from '../utils/catalogUrl';
 
+const buildCanonicalProductPath = (
+  product: ProductDetailsData,
+  slug: string,
+  existingCategoryPath: string[]
+) => {
+  const categoryPath =
+    product.product.characteristics?.full_path ||
+    (product.product as any)?.category_path ||
+    (existingCategoryPath.length > 0 ? existingCategoryPath.join('/') : null);
+
+  return buildProductUrl(slug, categoryPath);
+};
+
 const CatalogRouter = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const hasRedirectedRef = useRef(false);
   const [{ state, product, slug }, setRouteState] = useState<{
     state: 'category' | 'product' | 'loading' | 'not_found';
     product: ProductDetailsData | null;
@@ -20,6 +34,7 @@ const CatalogRouter = () => {
 
   useEffect(() => {
     let cancelled = false;
+    hasRedirectedRef.current = false;
 
     const resolveRoute = async () => {
       if (!productSlug) {
@@ -37,19 +52,25 @@ const CatalogRouter = () => {
         if (cancelled) return;
 
         if (data) {
+          console.log('[CatalogRouter] Product resolved, showing product page:', data.product?.id);
           const backendSlug = data.product?.slug;
-          if (backendSlug && backendSlug !== productSlug) {
-            const canonicalPath = buildProductUrl(
-              backendSlug,
-              data.product?.characteristics?.full_path || data.product?.category_path || (categoryPath.length > 0 ? categoryPath.join('/') : null)
-            );
-            console.log('[CatalogRouter] Slug mismatch detected. Redirecting to canonical path:', canonicalPath);
-            navigate(canonicalPath, { replace: true });
-            return;
+          if (
+            backendSlug &&
+            backendSlug !== productSlug &&
+            !cancelled &&
+            !hasRedirectedRef.current
+          ) {
+            const canonicalPath = buildCanonicalProductPath(data, backendSlug, categoryPath);
+            if (canonicalPath && canonicalPath !== location.pathname) {
+              console.log('[CatalogRouter] Redirecting to canonical product path:', canonicalPath);
+              hasRedirectedRef.current = true;
+              navigate(canonicalPath, { replace: true });
+              return;
+            }
           }
 
-          console.log('[CatalogRouter] Product resolved, showing product page:', data.product?.id);
           setRouteState({ state: 'product', product: data, slug: productSlug });
+          hasRedirectedRef.current = false;
         } else {
           console.warn('[CatalogRouter] Product not found, will fallback to category view:', productSlug);
           setRouteState({ state: 'not_found', product: null, slug: productSlug });
