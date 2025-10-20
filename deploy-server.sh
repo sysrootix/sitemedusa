@@ -184,33 +184,21 @@ echo ""
 print_info "Шаг 8/8: Перезапуск приложений"
 echo "-----------------------------"
 
-# Проверить, запущены ли процессы
-if pm2 list | grep -q "backend-dev\|frontend-dev"; then
-    print_warning "Остановка существующих процессов..."
-    pm2 stop all || true
-    pm2 delete all || true
+# Проверка на наличие процессов "frontend-dev-site" и "backend-dev-site"
+if pm2 list | grep -q "frontend-dev-site"; then
+    print_warning "Перезапуск frontend-dev-site..."
+    pm2 restart frontend-dev-site
+else
+    print_info "Запуск frontend через ecosystem.config.js"
+    pm2 start ecosystem.config.js --only frontend
 fi
 
-# Запуск через PM2
-print_warning "Запуск приложений через PM2..."
-
-# Для production используем собранные версии
-if [ "$NODE_ENV" = "production" ]; then
-    print_info "Режим: Production"
-
-    # Запуск backend в production режиме
-    cd backend
-    pm2 start npm --name "backend-prod" -- run start:prod
-    cd ..
-
-    # Для frontend нужен веб-сервер (nginx/apache)
-    print_warning "Frontend собран в production режиме (frontend/dist)"
-    print_info "Настройте nginx/apache для обслуживания frontend/dist"
+if pm2 list | grep -q "backend-dev-site"; then
+    print_warning "Перезапуск backend-dev-site..."
+    pm2 restart backend-dev-site
 else
-    print_info "Режим: Development"
-
-    # Запуск через ecosystem.config.js
-    pm2 start ecosystem.config.js
+    print_info "Запуск backend через ecosystem.config.js"
+    pm2 start ecosystem.config.js --only backend
 fi
 
 pm2 save
@@ -231,8 +219,8 @@ echo ""
 print_info "Полезные команды PM2:"
 echo "  pm2 list          - Список процессов"
 echo "  pm2 logs          - Просмотр логов"
-echo "  pm2 logs backend-dev  - Логи backend"
-echo "  pm2 logs frontend-dev - Логи frontend"
+echo "  pm2 logs backend-dev-site  - Логи backend"
+echo "  pm2 logs frontend-dev-site - Логи frontend"
 echo "  pm2 restart all   - Перезапуск всех процессов"
 echo "  pm2 stop all      - Остановка всех процессов"
 echo "  pm2 monit         - Мониторинг в реальном времени"

@@ -281,3 +281,35 @@ export const categoryRedirects: Record<string, string> = {
   'old/path': 'new/path',
 };
 ```
+
+### Sitemap для SEO
+
+Добавлена полная система генерации XML sitemap:
+
+#### Новые файлы:
+- `backend/src/controllers/sitemapController.ts` - Контроллер генерации sitemap
+- `backend/src/routes/sitemap.ts` - Роуты для sitemap
+- `SITEMAP_README.md` - Подробная документация
+
+#### Доступные sitemap:
+- `https://site.mda-platform.top/sitemap.xml` - Главный индекс
+- `https://site.mda-platform.top/sitemap-static.xml` - Статические страницы
+- `https://site.mda-platform.top/sitemap-shops.xml` - Магазины
+- `https://site.mda-platform.top/sitemap-categories.xml` - Категории
+- `https://site.mda-platform.top/sitemap-products.xml` - Товары (до 10,000)
+- `https://site.mda-platform.top/sitemap-iblock-11.xml` - Legacy формат (совместимость со старым сайтом)
+
+#### Особенности:
+- Динамическая генерация (всегда актуальные данные)
+- Автоматическое удаление дубликатов товаров
+- Иерархические URL для категорий и товаров
+- Legacy поддержка для старых URL магазинов
+
+Подробная документация: см. `SITEMAP_README.md`
+
+#### Конфигурация:
+
+Убедитесь что в `backend/.env` указан правильный URL:
+```env
+FRONTEND_URL=https://site.mda-platform.top
+```

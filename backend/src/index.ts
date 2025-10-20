@@ -94,28 +94,13 @@ class App {
    * Initialize routes
    */
   private initializeRoutes(): void {
+    // Sitemap routes (at root level)
+    const sitemapRoutes = require('@/routes/sitemap').default;
+    this.app.use('/', sitemapRoutes);
+
     // API routes
     this.app.use('/api', routes);
-    
-    // Root endpoint
-    this.app.get('/', (req, res) => {
-      res.json({
-        success: true,
-        message: 'Medusa Vape Shop API Server',
-        data: {
-          status: 'online',
-          version: '1.0.0',
-          timestamp: new Date().toISOString(),
-          environment: config.nodeEnv,
-          endpoints: {
-            api: '/api',
-            health: '/api/health',
-            docs: '/api',
-          },
-        },
-      });
-    });
-    
+
     logger.info('✅ Routes initialized');
   }
 
