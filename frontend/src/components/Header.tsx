@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { customToast } from '@/utils/toast'
-import { buildProductUrl, slugify } from '@/utils/catalogUrl'
+import { buildProductUrl, slugify, buildFallbackProductSlug } from '@/utils/catalogUrl'
 import { Menu, X, ShoppingCart, Search, LogIn, User as UserIcon, LogOut, ChevronDown, Trash2, Minus, Plus, PackageX, Heart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -38,7 +38,11 @@ const Header = () => {
   const openProductById = async (productId: string, fallbackName?: string, fallbackCategory?: string) => {
     try {
       const productData = await apiService.getProductById(productId)
-      const productSlug = productData.product.slug || slugify(productData.product.name || fallbackName || productId) || productId
+      const productSlug = productData.product.slug
+        ? productData.product.slug
+        : productData.product.id
+          ? buildFallbackProductSlug(productData.product.name || fallbackName, productData.product.id)
+          : slugify(productData.product.name || fallbackName || productId) || productId
 
       let categoryPath: string | null = null
 
@@ -51,7 +55,7 @@ const Header = () => {
       }
 
       const productUrl = buildProductUrl(productSlug, categoryPath)
-      navigate(productUrl)
+      navigate(productUrl, productData.product.id ? { state: { fallbackProductId: productData.product.id } } : undefined)
     } catch (error) {
       console.error('Failed to open product page:', error)
       customToast.error('Не удалось открыть карточку товара')

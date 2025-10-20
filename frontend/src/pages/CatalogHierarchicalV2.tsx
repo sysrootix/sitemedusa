@@ -15,7 +15,8 @@ import {
   buildCategoryUrl,
   parseCategoryUrl,
   buildCategoryPath,
-  slugify
+  slugify,
+  buildFallbackProductSlug
 } from '../utils/catalogUrl';
 import { checkCategoryRedirect, buildRedirectUrl } from '../utils/urlRedirects';
 
@@ -391,14 +392,18 @@ const CatalogHierarchicalV2 = () => {
       return;
     }
 
-    const productSlugFallback = slugify(product.name) || product.id;
-    const productSlug = product.slug || productSlugFallback;
+    const slugFromName = slugify(product.name);
+    const fallbackSlug = product.id
+      ? buildFallbackProductSlug(product.name, product.id)
+      : slugFromName || product.id || 'product';
+    const productSlug = product.slug || fallbackSlug;
     const loadingKey = product.id || productSlug;
     setOpeningProductId(loadingKey || null);
 
     let categoryPath = null;
     let resolvedSlug = productSlug;
     let productData: any | null = null;
+    let resolvedProductId: string | null = product.id || null;
 
     if (product.characteristics?.full_path && typeof product.characteristics.full_path === 'string') {
       categoryPath = product.characteristics.full_path;
@@ -425,6 +430,15 @@ const CatalogHierarchicalV2 = () => {
 
       if (productData?.product?.slug) {
         resolvedSlug = productData.product.slug;
+      } else if (productData?.product?.id) {
+        resolvedSlug = buildFallbackProductSlug(
+          productData.product.name ?? product.name,
+          productData.product.id
+        );
+      }
+
+      if (productData?.product?.id) {
+        resolvedProductId = productData.product.id;
       }
 
       if (!categoryPath && productData?.product) {
@@ -438,7 +452,8 @@ const CatalogHierarchicalV2 = () => {
 
       const productUrl = buildProductUrl(resolvedSlug, categoryPath);
       console.log('🔗 Navigating to product URL:', productUrl);
-      navigate(productUrl);
+      const navigationState = resolvedProductId ? { fallbackProductId: resolvedProductId } : undefined;
+      navigate(productUrl, navigationState ? { state: navigationState } : undefined);
     } catch (error) {
       console.error('Failed to open product page:', error);
       toast.error('Не удалось открыть карточку товара');

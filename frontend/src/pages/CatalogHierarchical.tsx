@@ -8,7 +8,7 @@ import CategoryBreadcrumbs from '../components/CategoryBreadcrumbs';
 import CategoryCard from '../components/CategoryCard';
 import ShopSelectorModal from '../components/ShopSelectorModal';
 import CatalogFilters, { FilterOptions } from '../components/CatalogFilters';
-import { buildProductUrl, slugify } from '../utils/catalogUrl';
+import { buildProductUrl, slugify, buildFallbackProductSlug } from '../utils/catalogUrl';
 
 interface HierarchicalCategory {
   id: string;
@@ -198,7 +198,11 @@ const CatalogHierarchical = () => {
   const handleProductClick = async (product: CategoryProduct) => {
     try {
       const productData = await api.getProductById(product.id);
-      const productSlug = productData.product.slug || slugify(productData.product.name || product.name) || product.id;
+      const productSlug = productData.product.slug
+        ? productData.product.slug
+        : productData.product.id
+          ? buildFallbackProductSlug(productData.product.name || product.name, productData.product.id)
+          : slugify(productData.product.name || product.name) || product.id;
 
       let categoryPath: string | null = null;
       if (productData.product.characteristics?.full_path && typeof productData.product.characteristics.full_path === 'string') {
@@ -210,7 +214,11 @@ const CatalogHierarchical = () => {
       }
 
       const productUrl = buildProductUrl(productSlug, categoryPath);
-      navigate(productUrl);
+      if (productData.product.id) {
+        navigate(productUrl, { state: { fallbackProductId: productData.product.id } });
+      } else {
+        navigate(productUrl);
+      }
     } catch (err) {
       console.error('Failed to open product page:', err);
       toast.error('Не удалось открыть карточку товара');

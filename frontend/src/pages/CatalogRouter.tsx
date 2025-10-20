@@ -5,7 +5,7 @@ import ProductPage from './ProductPage';
 import SkeletonLoader from '../components/SkeletonLoader';
 import api from '../services/api';
 import type { ProductDetailsData } from '../hooks/useProductDetails';
-import { parseProductUrl, buildProductUrl } from '../utils/catalogUrl';
+import { parseProductUrl, buildProductUrl, extractProductIdFromSlug, buildFallbackProductSlug } from '../utils/catalogUrl';
 
 const buildCanonicalProductPath = (
   product: ProductDetailsData,
@@ -22,6 +22,7 @@ const buildCanonicalProductPath = (
 
 const CatalogRouter = () => {
   const location = useLocation();
+  const locationState = (location.state as { fallbackProductId?: string } | null) ?? null;
   const navigate = useNavigate();
   const hasRedirectedRef = useRef(false);
   const processedPathRef = useRef<string | null>(null);
@@ -85,6 +86,62 @@ const CatalogRouter = () => {
           setRouteState({ state: 'product', product: data, slug: productSlug });
           processedPathRef.current = location.pathname;
         } else {
+          const fallbackProductId =
+            extractProductIdFromSlug(productSlug) ||
+            locationState?.fallbackProductId ||
+            null;
+
+          if (fallbackProductId) {
+            try {
+              const productById = await api.getProductById(fallbackProductId);
+              if (cancelled) return;
+
+              if (productById?.product?.id) {
+                const backendSlug = productById.product.slug;
+                const preferredSlug = backendSlug
+                  ? backendSlug
+                  : buildFallbackProductSlug(productById.product.name, productById.product.id);
+
+                if (
+                  backendSlug &&
+                  backendSlug !== productSlug &&
+                  !cancelled &&
+                  !hasRedirectedRef.current
+                ) {
+                  const canonicalPath = buildCanonicalProductPath(productById, backendSlug, categoryPath);
+                  console.log('[CatalogRouter] Redirecting to backend slug after ID lookup:', canonicalPath);
+                  hasRedirectedRef.current = true;
+                  setRouteState({ state: 'loading', product: null, slug: backendSlug });
+                  navigate(canonicalPath, { replace: true, state: { fallbackProductId } });
+                  return;
+                }
+
+                if (
+                  !backendSlug &&
+                  preferredSlug !== productSlug &&
+                  !cancelled &&
+                  !hasRedirectedRef.current
+                ) {
+                  const fallbackPath = buildCanonicalProductPath(productById, preferredSlug, categoryPath);
+                  console.log('[CatalogRouter] Redirecting to fallback slug with embedded ID:', fallbackPath);
+                  hasRedirectedRef.current = true;
+                  setRouteState({ state: 'loading', product: null, slug: preferredSlug });
+                  navigate(fallbackPath, { replace: true, state: { fallbackProductId } });
+                  return;
+                }
+
+                console.log('[CatalogRouter] Product resolved by ID fallback:', fallbackProductId);
+                setRouteState({ state: 'product', product: productById, slug: preferredSlug });
+                processedPathRef.current = location.pathname;
+                return;
+              }
+            } catch (fallbackErr) {
+              if (!cancelled) {
+                console.error('[CatalogRouter] Fallback lookup by product ID failed:', fallbackProductId, fallbackErr);
+              }
+            }
+          }
+
           console.warn('[CatalogRouter] Product not found, will fallback to category view:', productSlug);
           setRouteState({ state: 'not_found', product: null, slug: productSlug });
         }
@@ -100,7 +157,7 @@ const CatalogRouter = () => {
     return () => {
       cancelled = true;
     };
-  }, [productSlug, location.pathname, categoryPath, navigate]);
+  }, [productSlug, location.pathname, categoryPath, navigate, locationState?.fallbackProductId]);
 
   useEffect(() => {
     if (state === 'not_found') {
@@ -122,6 +179,7 @@ const CatalogRouter = () => {
     return (
       <ProductPage
         productSlug={slug}
+        productId={product?.product?.id}
         categoryPath={categoryPath}
         initialProduct={product}
       />

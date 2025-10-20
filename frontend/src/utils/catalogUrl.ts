@@ -95,6 +95,24 @@ export function buildProductUrl(
   return `/catalog/${categories.join('/')}/${productSlug}`;
 }
 
+const FALLBACK_SLUG_DELIMITER = '--pid-';
+
+export function buildFallbackProductSlug(name: string | null | undefined, id: string): string {
+  const base = slugify(name ?? '') || 'product';
+  const safeId = id.trim();
+  return `${base}${FALLBACK_SLUG_DELIMITER}${safeId}`;
+}
+
+export function extractProductIdFromSlug(slug: string | null | undefined): string | null {
+  if (!slug) return null;
+  const delimiterIndex = slug.indexOf(FALLBACK_SLUG_DELIMITER);
+  if (delimiterIndex === -1) {
+    return null;
+  }
+  const extracted = slug.slice(delimiterIndex + FALLBACK_SLUG_DELIMITER.length).trim();
+  return extracted.length > 0 ? extracted : null;
+}
+
 /**
  * Builds category URL
  * @param categoryPath - Full category path

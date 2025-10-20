@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/shared/ui'
 import api from '@/services/api'
 import toast from 'react-hot-toast'
-import { buildProductUrl, slugify } from '@/utils/catalogUrl'
+import { buildProductUrl, slugify, buildFallbackProductSlug } from '@/utils/catalogUrl'
 
 interface PopularProduct {
   id: string
@@ -32,7 +32,11 @@ const PopularProductsBlock = () => {
   const handleProductClick = async (product: PopularProduct) => {
     try {
       const productData = await api.getProductById(product.id)
-      const productSlug = productData.product.slug || slugify(productData.product.name) || product.id
+      const productSlug = productData.product.slug
+        ? productData.product.slug
+        : productData.product.id
+          ? buildFallbackProductSlug(productData.product.name, productData.product.id)
+          : slugify(productData.product.name) || product.id
 
       let categoryPath: string | null = null
       if (productData.product.characteristics?.full_path && typeof productData.product.characteristics.full_path === 'string') {
@@ -44,7 +48,11 @@ const PopularProductsBlock = () => {
       }
 
       const productUrl = buildProductUrl(productSlug, categoryPath)
-      navigate(productUrl)
+      if (productData.product.id) {
+        navigate(productUrl, { state: { fallbackProductId: productData.product.id } })
+      } else {
+        navigate(productUrl)
+      }
     } catch (error) {
       console.error('Failed to open product page:', error)
       toast.error('Не удалось открыть карточку товара')
