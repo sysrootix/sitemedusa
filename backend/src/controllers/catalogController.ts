@@ -349,6 +349,21 @@ class CatalogController {
         });
       }
 
+      // Try partial match fallback (to handle minor transliteration differences)
+      if (!item && slug.length > 5) {
+        const partialSlug = slug.slice(0, Math.max(slug.length - 2, 4));
+        item = await CatalogItem.findOne({
+          where: {
+            slug: { [Op.iLike]: `${partialSlug}%` },
+            is_active: true,
+          },
+          attributes: [
+            'id', 'shop_code', 'category_id', 'name', 'slug',
+            'quanty', 'retail_price', 'characteristics', 'modifications'
+          ]
+        });
+      }
+
       if (!item) {
         res.status(404).json({
           success: false,
