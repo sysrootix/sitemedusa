@@ -61,16 +61,18 @@ const CatalogRouter = () => {
             !hasRedirectedRef.current
           ) {
             const canonicalPath = buildCanonicalProductPath(data, backendSlug, categoryPath);
-            if (canonicalPath && canonicalPath !== location.pathname) {
+            const canonicalSlug = canonicalPath.replace(/^\/catalog\/?/, '').split('/').filter(Boolean).pop();
+
+            if (canonicalSlug && canonicalSlug !== productSlug && canonicalPath !== location.pathname) {
               console.log('[CatalogRouter] Redirecting to canonical product path:', canonicalPath);
               hasRedirectedRef.current = true;
+              setRouteState({ state: 'loading', product: null, slug: canonicalSlug });
               navigate(canonicalPath, { replace: true });
               return;
             }
           }
 
           setRouteState({ state: 'product', product: data, slug: productSlug });
-          hasRedirectedRef.current = false;
         } else {
           console.warn('[CatalogRouter] Product not found, will fallback to category view:', productSlug);
           setRouteState({ state: 'not_found', product: null, slug: productSlug });
