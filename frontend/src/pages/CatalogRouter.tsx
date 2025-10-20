@@ -24,6 +24,7 @@ const CatalogRouter = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const hasRedirectedRef = useRef(false);
+  const processedPathRef = useRef<string | null>(null);
   const [{ state, product, slug }, setRouteState] = useState<{
     state: 'category' | 'product' | 'loading' | 'not_found';
     product: ProductDetailsData | null;
@@ -36,13 +37,19 @@ const CatalogRouter = () => {
   );
 
   useEffect(() => {
+    if (processedPathRef.current === location.pathname) {
+      return;
+    }
+
     let cancelled = false;
     hasRedirectedRef.current = false;
+    processedPathRef.current = location.pathname;
 
     const resolveRoute = async () => {
       if (!productSlug) {
         console.log('[CatalogRouter] No product slug detected, showing catalog view.');
         setRouteState({ state: 'category', product: null, slug: null });
+        processedPathRef.current = location.pathname;
         return;
       }
 
@@ -76,6 +83,7 @@ const CatalogRouter = () => {
           }
 
           setRouteState({ state: 'product', product: data, slug: productSlug });
+          processedPathRef.current = location.pathname;
         } else {
           console.warn('[CatalogRouter] Product not found, will fallback to category view:', productSlug);
           setRouteState({ state: 'not_found', product: null, slug: productSlug });
