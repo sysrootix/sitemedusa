@@ -55,6 +55,7 @@ const CatalogHierarchicalV2 = () => {
   const [shops, setShops] = useState<Array<{ shop_code: string; shop_name: string; city: string; address: string; product_count: number }>>([]);
   const [showShopSelector, setShowShopSelector] = useState(false);
   const [catalogMode, setCatalogMode] = useState<'general' | 'shop'>('general');
+  const [openingProductId, setOpeningProductId] = useState<string | null>(null);
   
   // New states
   const [searchQuery, setSearchQuery] = useState('');
@@ -385,10 +386,19 @@ const CatalogHierarchicalV2 = () => {
 
   // Removed handleQuickView - using full product modal instead
 
-  const handleProductClick = (product: any) => {
+  const handleProductClick = async (product: any) => {
+    if (openingProductId) {
+      return;
+    }
+
+    setOpeningProductId(product.id || null);
+
     const productSlug = product.slug || slugify(product.name) || product.id;
 
     let categoryPath = null;
+    let resolvedSlug = productSlug;
+    let productData: any | null = null;
+
     if (product.characteristics?.full_path && typeof product.characteristics.full_path === 'string') {
       categoryPath = product.characteristics.full_path;
       console.log('📂 Using category path from product:', categoryPath);
@@ -405,10 +415,32 @@ const CatalogHierarchicalV2 = () => {
       console.log('⚠️ No category path found for product, using simple URL');
     }
 
-    const productUrl = buildProductUrl(productSlug, categoryPath);
-    console.log('🔗 Navigating to product URL:', productUrl);
+    try {
+      if (!product.slug && product.id) {
+        productData = await api.getProductById(product.id);
+        if (productData?.product?.slug) {
+          resolvedSlug = productData.product.slug;
+        }
 
-    navigate(productUrl);
+        if (!categoryPath) {
+          const fromCharacteristics = productData?.product?.characteristics?.full_path;
+          const fromCategoryPath = productData?.product?.category_path;
+          categoryPath =
+            (typeof fromCharacteristics === 'string' && fromCharacteristics) ||
+            (typeof fromCategoryPath === 'string' && fromCategoryPath) ||
+            categoryPath;
+        }
+      }
+
+      const productUrl = buildProductUrl(resolvedSlug, categoryPath);
+      console.log('🔗 Navigating to product URL:', productUrl);
+      navigate(productUrl);
+    } catch (error) {
+      console.error('Failed to open product page:', error);
+      toast.error('Не удалось открыть карточку товара');
+    } finally {
+      setOpeningProductId(null);
+    }
   };
   // Apply filters and sorting to products
   const filteredAndSortedProducts = useMemo(() => {
@@ -794,22 +826,24 @@ const CatalogHierarchicalV2 = () => {
                 </div>
 
                 <div className={`grid gap-4 md:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
-                  {filteredAndSortedProducts.map((product, index) => (
-                    <motion.div
-                      key={product.id}
-                      initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{
-                        duration: 0.3,
-                        delay: 0.03 * index,
-                        type: "spring",
-                        stiffness: 100
-                      }}
-                      className="group relative h-full"
-                    >
+                  {filteredAndSortedProducts.map((product, index) => {
+                    const isOpening = openingProductId === product.id;
+                    return (
+                      <motion.div
+                        key={product.id}
+                        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{
+                          duration: 0.3,
+                          delay: 0.03 * index,
+                          type: "spring",
+                          stiffness: 100
+                        }}
+                        className="group relative h-full"
+                      >
                       <div 
                         onClick={() => handleProductClick(product)}
-                        className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer h-full ${viewMode === 'list' ? 'flex' : 'flex flex-col'}`}
+                        className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 overflow-hidden h-full ${viewMode === 'list' ? 'flex' : 'flex flex-col'} ${isOpening ? 'pointer-events-none opacity-75' : 'cursor-pointer'}`}
                       >
                         {/* Product Image */}
                         <div className={`relative ${viewMode === 'list' ? 'w-32 md:w-40' : 'aspect-square'} bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 dark:from-gray-700 dark:via-gray-750 dark:to-gray-800 flex items-center justify-center overflow-hidden`}>
@@ -847,6 +881,12 @@ const CatalogHierarchicalV2 = () => {
                             (catalogMode === 'general' && product.total_quantity > 0)) && (
                             <div className="absolute top-2 left-2 md:top-3 md:left-3 px-3 py-1.5 bg-green-500 text-white text-xs font-bold rounded-lg shadow-lg">
                               В наличии
+                            </div>
+                          )}
+
+                          {isOpening && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm">
+                              <div className="w-10 h-10 border-4 border-purple-400/70 border-t-transparent rounded-full animate-spin" />
                             </div>
                           )}
                         </div>
@@ -944,7 +984,8 @@ const CatalogHierarchicalV2 = () => {
                         </div>
                       </div>
                     </motion.div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Pagination */}

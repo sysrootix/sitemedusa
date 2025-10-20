@@ -35,7 +35,7 @@ const ProductModal = ({
   const { product, loading, error } = useProductDetails({
     productId,
     productSlug,
-    enabled: displayMode === 'modal' ? isOpen : true,
+    enabled: isPageMode ? true : isOpen,
     initialProduct,
   });
 
@@ -107,16 +107,173 @@ const ProductModal = ({
     }
   };
 
-  const cardClasses = displayMode === 'modal'
-    ? 'relative w-full max-w-5xl max-h-[95vh] md:max-h-[90vh] bg-white dark:bg-gray-800 rounded-xl md:rounded-3xl shadow-2xl overflow-hidden'
-    : 'relative w-full bg-white dark:bg-gray-900 rounded-3xl md:rounded-[28px] border border-gray-200/60 dark:border-gray-800 shadow-2xl overflow-hidden';
+  const isPageMode = displayMode === 'page';
 
-  const scrollClasses = displayMode === 'modal'
-    ? 'overflow-y-auto max-h-[95vh] md:max-h-[90vh]'
-    : '';
+  const cardClasses = isPageMode
+    ? 'relative w-full bg-white dark:bg-gray-900 rounded-3xl md:rounded-[28px] border border-gray-200/60 dark:border-gray-800 shadow-2xl overflow-hidden'
+    : 'relative w-full max-w-5xl max-h-[95vh] md:max-h-[90vh] bg-white dark:bg-gray-800 rounded-xl md:rounded-3xl shadow-2xl overflow-hidden';
+
+  const scrollClasses = isPageMode
+    ? ''
+    : 'overflow-y-auto max-h-[95vh] md:max-h-[90vh]';
 
   const pageWrapperClasses = 'bg-gradient-to-b from-gray-50 via-white to-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 min-h-screen';
   const pageContainerClasses = 'container-custom px-4 md:px-6 py-8 md:py-12';
+
+  const productBodyClasses = isPageMode
+    ? 'p-6 md:p-10 space-y-10 md:space-y-12'
+    : 'p-3 md:p-8';
+
+  const headerWrapperClasses = isPageMode
+    ? 'mb-8 md:mb-10 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/80 p-6 md:p-10 shadow-xl'
+    : 'mb-4 md:mb-8';
+
+  const headerLayoutClasses = isPageMode
+    ? 'grid gap-6 md:gap-10 md:grid-cols-[minmax(0,320px)_1fr] items-start'
+    : 'flex flex-col md:flex-row items-start gap-3 md:gap-6';
+
+  const imageWrapperClasses = isPageMode
+    ? 'relative w-full max-w-xs mx-auto md:mx-0 aspect-square rounded-3xl overflow-hidden bg-gradient-to-br from-purple-100 via-white to-purple-200 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center shadow-inner'
+    : 'flex-shrink-0 w-20 h-20 md:w-32 md:h-32 bg-gray-100 dark:bg-gray-700 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto md:mx-0';
+
+  const infoWrapperClasses = isPageMode
+    ? 'flex flex-col gap-6 text-left'
+    : 'flex-1 text-center md:text-left';
+
+  const formatShopCount = (count: number) => {
+    if (count === 1) return 'магазин';
+    if (count >= 2 && count <= 4) return 'магазина';
+    return 'магазинов';
+  };
+
+  const renderPriceDisplay = () => {
+    if (!product) return null;
+
+    const minPrice = Math.round(product.min_price || 0).toLocaleString('ru-RU');
+    const maxPrice = Math.round(product.max_price || 0).toLocaleString('ru-RU');
+    const samePrice = product.min_price === product.max_price;
+    const totalQty = Math.max(0, Math.round(product.total_quantity || 0));
+    const availableShopsCount = product.shops
+      ? product.shops.filter((shop: any) => shop.available).length
+      : 0;
+
+    if (isPageMode) {
+      return (
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="inline-flex items-baseline gap-2 px-4 py-2.5 rounded-2xl bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm">
+            {samePrice ? (
+              <>
+                <span className="text-3xl font-bold">{minPrice}</span>
+                <span className="text-base font-medium opacity-80">₽</span>
+              </>
+            ) : (
+              <>
+                <span className="text-sm uppercase tracking-wide opacity-70">от</span>
+                <span className="text-3xl font-bold">{minPrice}</span>
+                <span className="text-base font-medium opacity-80">₽</span>
+                <span className="text-sm font-medium opacity-70">до</span>
+                <span className="text-3xl font-bold">{maxPrice}</span>
+                <span className="text-base font-medium opacity-80">₽</span>
+              </>
+            )}
+          </div>
+          <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-2xl text-sm font-medium ${
+            totalQty > 0
+              ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-200'
+              : 'bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-300'
+          }`}>
+            <Package className="w-4 h-4" />
+            <span>В наличии: {totalQty} шт.</span>
+          </div>
+          {product.shops && product.shops.length > 0 && (
+            <div className="inline-flex items-center gap-2 px-3 py-2 rounded-2xl bg-gray-100 dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200">
+              <Store className="w-4 h-4" />
+              <span>
+                {availableShopsCount > 0
+                  ? `${availableShopsCount} ${formatShopCount(availableShopsCount)}`
+                  : 'Магазины уточняются'}
+              </span>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <>
+        <div className="flex items-baseline justify-center md:justify-start gap-2 mb-3">
+          {samePrice ? (
+            <span className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+              {minPrice} ₽
+            </span>
+          ) : (
+            <>
+              <span className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                {minPrice}
+              </span>
+              <span className="text-lg md:text-xl text-gray-500 dark:text-gray-400">—</span>
+              <span className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                {maxPrice} ₽
+              </span>
+            </>
+          )}
+        </div>
+        <div className="flex items-center justify-center md:justify-start gap-2 text-xs md:text-sm">
+          <span className="text-gray-600 dark:text-gray-400">
+            Всего в наличии:
+          </span>
+          <span className={`font-semibold ${
+            product.total_quantity > 0
+              ? 'text-green-600 dark:text-green-400'
+              : 'text-red-600 dark:text-red-400'
+          }`}>
+            {totalQty} шт.
+          </span>
+        </div>
+      </>
+    );
+  };
+
+  const renderCategoryChips = () => {
+    if (!product || !isPageMode) {
+      return null;
+    }
+
+    const rawPath =
+      (typeof product.product.characteristics?.full_path === 'string' && product.product.characteristics.full_path) ||
+      (typeof (product.product as any)?.category_path === 'string' && (product.product as any).category_path) ||
+      product.product.category_name;
+
+    if (!rawPath || typeof rawPath !== 'string') {
+      return null;
+    }
+
+    const parts = rawPath
+      .split(/>|\/+/)
+      .map(part => part.trim())
+      .filter(Boolean);
+
+    if (parts.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        {parts.map((part, index) => (
+          <span
+            key={`${part}-${index}`}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+              index === parts.length - 1
+                ? 'bg-purple-600 text-white dark:bg-purple-500 dark:text-white'
+                : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
+            }`}
+          >
+            {part}
+          </span>
+        ))}
+      </div>
+    );
+  };
 
   const favoriteButton = product ? (
     <button
@@ -125,15 +282,18 @@ const ProductModal = ({
         price: product.product.price,
         image_url: product.product.image_url,
       })}
-      className="p-1.5 md:p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center shrink-0"
+      className={`${isPageMode
+        ? 'p-2.5 md:p-3 rounded-2xl bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-200 hover:bg-purple-100 dark:hover:bg-purple-900/40 shadow-sm'
+        : 'p-1.5 md:p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+      } transition-colors flex items-center justify-center shrink-0`}
     >
       <Heart
-        className={`w-5 h-5 md:w-6 md:h-6 shrink-0 ${isFavorite(product.product.id) ? 'fill-red-500 text-red-500' : 'text-gray-700 dark:text-gray-300'}`}
+        className={`w-5 h-5 md:w-6 md:h-6 shrink-0 ${isFavorite(product.product.id) ? 'fill-red-500 text-red-500' : isPageMode ? 'text-purple-600 dark:text-purple-200' : 'text-gray-700 dark:text-gray-300'}`}
       />
     </button>
   ) : null;
 
-  const modalTopActions = displayMode === 'modal' ? (
+  const modalTopActions = !isPageMode ? (
     <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10 flex gap-2 items-center">
       {favoriteButton}
       {onClose && (
@@ -147,7 +307,7 @@ const ProductModal = ({
     </div>
   ) : null;
 
-  const pageTopbar = displayMode === 'page' ? (
+  const pageTopbar = isPageMode ? (
     <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4 py-3 md:px-6 md:py-4 border-b border-gray-200 dark:border-gray-700 bg-white/85 dark:bg-gray-900/85 backdrop-blur">
       <div className="flex items-center gap-2">
         {onNavigateBack && (
@@ -175,52 +335,37 @@ const ProductModal = ({
         {loading ? (
           <SkeletonLoader variant="product-modal" count={1} />
         ) : product ? (
-          <div className="p-3 md:p-8">
+          <div className={productBodyClasses}>
             {/* Product Header */}
-            <div className="mb-4 md:mb-8">
-              <div className="flex flex-col md:flex-row items-start gap-3 md:gap-6">
+            <div className={headerWrapperClasses}>
+              <div className={headerLayoutClasses}>
                 {/* Product Image Placeholder */}
-                <div className="flex-shrink-0 w-20 h-20 md:w-32 md:h-32 bg-gray-100 dark:bg-gray-700 rounded-xl md:rounded-2xl flex items-center justify-center mx-auto md:mx-0">
-                  <Package className="w-10 h-10 md:w-16 md:h-16 text-gray-400 dark:text-gray-500" />
+                <div className={imageWrapperClasses}>
+                  {isPageMode && (
+                    <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/40 via-transparent to-purple-200/60 dark:from-white/5 dark:to-purple-800/20" />
+                  )}
+                  <Package className={`relative z-10 ${isPageMode ? 'w-20 h-20 md:w-28 md:h-28 text-purple-500/80 dark:text-purple-300/70' : 'w-10 h-10 md:w-16 md:h-16 text-gray-400 dark:text-gray-500'}`} />
                 </div>
 
                 {/* Product Info */}
-                <div className="flex-1 text-center md:text-left">
-                  <h2 className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-2 px-2">
-                    {product.product.name}
-                  </h2>
-
-                  {/* Price Range */}
-                  <div className="flex items-baseline justify-center md:justify-start gap-2 mb-3">
-                    {product.min_price === product.max_price ? (
-                      <span className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                        {Math.round(product.min_price).toLocaleString('ru-RU')} ₽
-                      </span>
-                    ) : (
-                      <>
-                        <span className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                          {Math.round(product.min_price).toLocaleString('ru-RU')}
-                        </span>
-                        <span className="text-lg md:text-xl text-gray-500 dark:text-gray-400">—</span>
-                        <span className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                          {Math.round(product.max_price).toLocaleString('ru-RU')} ₽
-                        </span>
-                      </>
-                    )}
+                <div className={infoWrapperClasses}>
+                  <div className="space-y-3">
+                    <h2 className={`${isPageMode
+                      ? 'text-2xl md:text-4xl font-bold text-gray-900 dark:text-white leading-tight'
+                      : 'text-lg md:text-2xl font-bold text-gray-900 dark:text-white mb-2 px-2'
+                    }`}>
+                      {product.product.name}
+                    </h2>
+                    {renderCategoryChips()}
                   </div>
 
-                  {/* Total Stock */}
-                  <div className="flex items-center justify-center md:justify-start gap-2 text-xs md:text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Всего в наличии:
-                    </span>
-                    <span className={`font-semibold ${
-                      product.total_quantity > 0
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-red-600 dark:text-red-400'
-                    }`}>
-                      {Math.round(product.total_quantity)} шт.
-                    </span>
+                  <div className="space-y-4">
+                    {renderPriceDisplay()}
+                    {isPageMode && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        {favoriteButton}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -228,7 +373,12 @@ const ProductModal = ({
 
             {/* Characteristics */}
             {product.product.characteristics && Object.keys(product.product.characteristics).length > 0 && (
-              <div className="mb-4 p-3 md:p-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-700/50 dark:to-gray-800/50 rounded-xl border border-blue-100 dark:border-gray-600">
+              <div
+                className={`${isPageMode
+                  ? 'rounded-3xl border border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/80 p-6 md:p-8 space-y-4 mb-8 md:mb-10'
+                  : 'mb-4 p-3 md:p-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-700/50 dark:to-gray-800/50 rounded-xl border border-blue-100 dark:border-gray-600'
+                }`}
+              >
                 <h3 className="text-sm md:text-base font-semibold text-gray-900 dark:text-white mb-2 md:mb-3 flex items-center gap-2">
                   <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -282,8 +432,13 @@ const ProductModal = ({
             {/* Shops */}
             {/* Shop availability summary */}
             {product.shops && product.shops.length > 0 && (
-              <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/40 rounded-xl border border-gray-200 dark:border-gray-700">
-                <p className="text-sm text-gray-600 dark:text-gray-300">
+              <div
+                className={`${isPageMode
+                  ? 'rounded-3xl border border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/80 p-6 md:p-7'
+                  : 'mt-6 p-4 bg-gray-50 dark:bg-gray-700/40 rounded-xl border border-gray-200 dark:border-gray-700'
+                }`}
+              >
+                <p className={`${isPageMode ? 'text-base text-gray-700 dark:text-gray-200' : 'text-sm text-gray-600 dark:text-gray-300'}`}>
                   Товар доступен в {product.shops.filter(shop => shop.available).length} из {product.shops.length} магазинов.
                 </p>
               </div>
@@ -291,11 +446,11 @@ const ProductModal = ({
 
             {/* Detailed descriptions */}
             {product.product.characteristics && product.product.characteristics.description && (
-              <div className="mt-6 md:mt-8">
-                <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-3">
+              <div className={`${isPageMode ? 'mt-10 md:mt-12 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/80 p-6 md:p-8' : 'mt-6 md:mt-8'}`}>
+                <h3 className={`${isPageMode ? 'text-xl md:text-2xl font-semibold text-gray-900 dark:text-white mb-4' : 'text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-3'}`}>
                   Описание
                 </h3>
-                <div className="prose prose-sm md:prose base prose-gray max-w-none dark:prose-invert">
+                <div className={`${isPageMode ? 'prose prose-sm md:prose-lg prose-gray max-w-none dark:prose-invert' : 'prose prose-sm md:prose-base prose-gray max-w-none dark:prose-invert'}`}>
                   <p>{product.product.characteristics.description}</p>
                 </div>
               </div>
@@ -303,41 +458,44 @@ const ProductModal = ({
 
             {/* Shops detailed list */}
             {product.shops && product.shops.length > 0 && (
-              <div className="mt-6 md:mt-8">
-                <h3 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                  Выберите магазин
+              <div className={`${isPageMode ? 'mt-10 md:mt-12' : 'mt-6 md:mt-8'}`} id="shop-list">
+                <h3 className={`${isPageMode ? 'text-xl md:text-2xl font-semibold text-gray-900 dark:text-white mb-4' : 'text-lg md:text-xl font-semibold text-gray-900 dark:text-white mb-3'}`}>
+                  Доступные магазины
                 </h3>
-                <div className="space-y-3">
+                <div className={`space-y-3 ${isPageMode ? 'md:space-y-4' : ''}`}>
                   {product.shops.map(shop => (
                     <motion.div
                       key={`${shop.shop_code}-compact`}
                       layout
-                      className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-colors"
+                      className={`${isPageMode
+                        ? 'p-5 md:p-6 rounded-3xl border border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/80 shadow-sm hover:shadow-lg transition-all'
+                        : 'p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 transition-colors'
+                      }`}
                     >
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                         <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
-                            <Store className="w-5 h-5 text-purple-600 dark:text-purple-300" />
+                          <div className={`${isPageMode ? 'w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/30' : 'w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/40'} flex items-center justify-center`}>
+                            <Store className={`${isPageMode ? 'w-5 h-5 text-purple-600 dark:text-purple-200' : 'w-5 h-5 text-purple-600 dark:text-purple-300'}`} />
                           </div>
                           <div>
-                            <div className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
+                            <div className={`${isPageMode ? 'text-base md:text-lg font-semibold text-gray-900 dark:text-white' : 'text-sm md:text-base font-semibold text-gray-900 dark:text-white'}`}>
                               {shop.shop_name}
                             </div>
-                            <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                              <MapPin className="w-3 h-3" />
+                            <div className={`${isPageMode ? 'text-sm md:text-base text-gray-500 dark:text-gray-400 flex items-center gap-1.5' : 'text-xs md:text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1'}`}>
+                              <MapPin className={`${isPageMode ? 'w-4 h-4' : 'w-3 h-3'}`} />
                               <span>{shop.city}, {shop.address}</span>
                             </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 md:gap-4">
-                          <div className={`text-xs md:text-sm font-medium ${
+                          <div className={`text-xs md:text-sm font-medium ${isPageMode ? 'md:text-base' : ''} ${
                             shop.available
                               ? 'text-green-600 dark:text-green-400'
                               : 'text-red-500 dark:text-red-400'
                           }`}>
                             {shop.available ? 'В наличии' : 'Нет в наличии'}
                           </div>
-                          <div className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
+                          <div className={`${isPageMode ? 'text-lg font-semibold text-gray-900 dark:text-white' : 'text-sm md:text-base font-semibold text-gray-900 dark:text-white'}`}>
                             {shop.price ? `${Math.round(shop.price).toLocaleString('ru-RU')} ₽` : '—'}
                           </div>
                           <button
@@ -356,7 +514,10 @@ const ProductModal = ({
                                 modId,
                               );
                             }}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition-colors"
+                            className={`${isPageMode
+                              ? 'inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white shadow-md transition-all'
+                              : 'inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white shadow-sm transition-colors'
+                            }`}
                           >
                             <ShoppingCart className="w-4 h-4" />
                             <span>Добавить</span>
@@ -365,11 +526,11 @@ const ProductModal = ({
                       </div>
 
                       {shop.modifications && shop.modifications.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
-                          <div className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                        <div className={`mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2 ${isPageMode ? 'md:pt-4 md:space-y-3' : ''}`}>
+                          <div className={`${isPageMode ? 'text-sm font-medium text-gray-600 dark:text-gray-400' : 'text-xs font-medium text-gray-600 dark:text-gray-400'}`}>
                             Выберите вариант:
                           </div>
-                          <div className="flex flex-wrap gap-2">
+                          <div className={`flex flex-wrap gap-2 ${isPageMode ? 'md:gap-3' : ''}`}>
                             {(showAllModifications[shop.shop_code]
                               ? shop.modifications
                               : shop.modifications.slice(0, 6)
@@ -385,7 +546,7 @@ const ProductModal = ({
                                     [shop.shop_code]: selectedModifications[shop.shop_code] === mod.id ? '' : mod.id,
                                   })}
                                   disabled={!mod.quanty || mod.quanty <= 0}
-                                  className={`px-3 py-1.5 rounded-full border text-xs transition-all ${
+                                  className={`px-3 py-1.5 rounded-full border text-xs transition-all ${isPageMode ? 'md:px-4 md:py-2 md:text-sm' : ''} ${
                                     selectedModifications[shop.shop_code] === mod.id
                                       ? 'border-purple-600 bg-purple-50 dark:border-purple-300 dark:bg-purple-900/40 text-purple-700 dark:text-purple-200'
                                       : 'border-gray-200 dark:border-gray-700 hover:border-purple-400 dark:hover:border-purple-400 text-gray-600 dark:text-gray-300'
@@ -420,7 +581,7 @@ const ProductModal = ({
             {/* Modifications */}
           </div>
         ) : (
-          <div className="p-8 text-center text-gray-600 dark:text-gray-400">
+          <div className={`${isPageMode ? 'p-10 md:p-16 text-center text-gray-600 dark:text-gray-300 space-y-4' : 'p-8 text-center text-gray-600 dark:text-gray-400'}`}>
             Товар не найден
           </div>
         )}
