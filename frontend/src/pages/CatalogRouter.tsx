@@ -23,10 +23,12 @@ const CatalogRouter = () => {
 
     const resolveRoute = async () => {
       if (!productSlug) {
+        console.log('[CatalogRouter] No product slug detected, showing catalog view.');
         setRouteState({ state: 'category', product: null, slug: null });
         return;
       }
 
+      console.log('[CatalogRouter] Resolving product slug:', productSlug);
       setRouteState({ state: 'loading', product: null, slug: productSlug });
 
       try {
@@ -35,13 +37,15 @@ const CatalogRouter = () => {
         if (cancelled) return;
 
         if (data) {
+          console.log('[CatalogRouter] Product resolved, showing product page:', data.product?.id);
           setRouteState({ state: 'product', product: data, slug: productSlug });
         } else {
+          console.warn('[CatalogRouter] Product not found, will fallback to category view:', productSlug);
           setRouteState({ state: 'not_found', product: null, slug: productSlug });
         }
       } catch (err) {
         if (cancelled) return;
-        console.warn('Product lookup failed, falling back to catalog view:', productSlug, err);
+        console.error('[CatalogRouter] Product lookup failed:', productSlug, err);
         setRouteState({ state: 'not_found', product: null, slug: productSlug });
       }
     };
@@ -56,6 +60,7 @@ const CatalogRouter = () => {
   useEffect(() => {
     if (state === 'not_found') {
       const categoryPathOnly = categoryPath.length > 0 ? `/catalog/${categoryPath.join('/')}` : '/catalog';
+      console.log('[CatalogRouter] Redirecting to category due to missing product:', categoryPathOnly);
       navigate(categoryPathOnly, { replace: true });
     }
   }, [state, categoryPath, navigate]);

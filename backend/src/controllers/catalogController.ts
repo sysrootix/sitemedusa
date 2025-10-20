@@ -324,6 +324,7 @@ class CatalogController {
   public async getProductBySlug(req: Request, res: Response): Promise<void> {
     try {
       const slugParam = (req.params.slug || '').trim();
+      logger.info(`CatalogController.getProductBySlug invoked with slug: ${slugParam}`);
 
       if (!slugParam) {
         res.status(404).json({
@@ -346,6 +347,7 @@ class CatalogController {
 
       // If not found by exact match, try finding by slug prefix (for old URLs without shop_code)
       if (!item) {
+        logger.debug(`No exact slug match for ${slugParam}, trying slug_% fallback`);
         item = await CatalogItem.findOne({
           where: {
             slug: { [Op.like]: `${slugParam}_%` }, // Match slug that starts with given slug + _
@@ -361,6 +363,7 @@ class CatalogController {
       // Try partial match fallback (to handle minor transliteration differences)
       if (!item && slugParam.length > 5) {
         const partialSlug = slugParam.slice(0, Math.max(slugParam.length - 2, 4));
+        logger.debug(`No slug_% match for ${slugParam}, trying partial match with prefix ${partialSlug}`);
         item = await CatalogItem.findOne({
           where: {
             slug: { [Op.iLike]: `${partialSlug}%` },
@@ -374,6 +377,7 @@ class CatalogController {
       }
 
       if (!item) {
+        logger.warn(`Product not found by slug: ${slugParam}`);
         res.status(404).json({
           success: false,
           message: 'Product not found',
@@ -438,8 +442,9 @@ class CatalogController {
       };
 
       res.status(200).json(response);
+      logger.info(`Product ${item.id} retrieved by slug ${slugParam}`);
     } catch (error) {
-      logger.error('❌ Error fetching product by slug:', error);
+      logger.error(`❌ Error fetching product by slug ${req.params.slug}:`, error);
       res.status(500).json({
         success: false,
         message: 'Failed to fetch product',
