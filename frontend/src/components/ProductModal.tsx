@@ -109,11 +109,14 @@ const ProductModal = ({
 
   const cardClasses = displayMode === 'modal'
     ? 'relative w-full max-w-5xl max-h-[95vh] md:max-h-[90vh] bg-white dark:bg-gray-800 rounded-xl md:rounded-3xl shadow-2xl overflow-hidden'
-    : 'relative w-full max-w-5xl mx-auto bg-white dark:bg-gray-900/80 rounded-2xl md:rounded-3xl shadow-lg md:shadow-xl overflow-hidden';
+    : 'relative w-full bg-white dark:bg-gray-900 rounded-3xl md:rounded-[28px] border border-gray-200/60 dark:border-gray-800 shadow-2xl overflow-hidden';
 
   const scrollClasses = displayMode === 'modal'
     ? 'overflow-y-auto max-h-[95vh] md:max-h-[90vh]'
-    : 'overflow-y-auto';
+    : '';
+
+  const pageWrapperClasses = 'bg-gradient-to-b from-gray-50 via-white to-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 min-h-screen';
+  const pageContainerClasses = 'container-custom px-4 md:px-6 py-8 md:py-12';
 
   const favoriteButton = product ? (
     <button
@@ -145,7 +148,7 @@ const ProductModal = ({
   ) : null;
 
   const pageTopbar = displayMode === 'page' ? (
-    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4 py-3 md:px-6 md:py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60">
+    <div className="sticky top-0 z-20 flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4 py-3 md:px-6 md:py-4 border-b border-gray-200 dark:border-gray-700 bg-white/85 dark:bg-gray-900/85 backdrop-blur">
       <div className="flex items-center gap-2">
         {onNavigateBack && (
           <button
@@ -452,8 +455,12 @@ const ProductModal = ({
   }
 
   return (
-    <div className={cardClasses}>
-      {content}
+    <div className={pageWrapperClasses}>
+      <div className={pageContainerClasses}>
+        <div className={cardClasses}>
+          {content}
+        </div>
+      </div>
     </div>
   );
 };

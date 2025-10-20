@@ -20,14 +20,12 @@ const ProductPage = ({ productSlug, categoryPath, initialProduct = null }: Produ
   }, [categoryPath]);
 
   return (
-    <div className="py-4 md:py-8">
-      <ProductModal
-        displayMode="page"
-        productSlug={productSlug}
-        initialProduct={initialProduct ?? null}
-        onNavigateBack={() => navigate(backUrl)}
-      />
-    </div>
+    <ProductModal
+      displayMode="page"
+      productSlug={productSlug}
+      initialProduct={initialProduct ?? null}
+      onNavigateBack={() => navigate(backUrl)}
+    />
   );
 };
 
