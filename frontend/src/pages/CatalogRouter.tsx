@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import CatalogHierarchicalV2 from './CatalogHierarchicalV2';
 import ProductPage from './ProductPage';
 import SkeletonLoader from '../components/SkeletonLoader';
+import NotFound from './NotFound';
 import api from '../services/api';
 import type { ProductDetailsData } from '../hooks/useProductDetails';
 import { parseProductUrl } from '../utils/catalogUrl';
@@ -10,7 +11,7 @@ import { parseProductUrl } from '../utils/catalogUrl';
 const CatalogRouter = () => {
   const location = useLocation();
   const [{ state, product, slug }, setRouteState] = useState<{
-    state: 'category' | 'product' | 'loading';
+    state: 'category' | 'product' | 'loading' | 'not_found';
     product: ProductDetailsData | null;
     slug: string | null;
   }>({ state: 'category', product: null, slug: null });
@@ -36,12 +37,12 @@ const CatalogRouter = () => {
         if (data) {
           setRouteState({ state: 'product', product: data, slug: productSlug });
         } else {
-          setRouteState({ state: 'category', product: null, slug: null });
+          setRouteState({ state: 'not_found', product: null, slug: productSlug });
         }
       } catch (err) {
         if (cancelled) return;
         console.warn('Product lookup failed, falling back to catalog view:', productSlug, err);
-        setRouteState({ state: 'category', product: null, slug: null });
+        setRouteState({ state: 'not_found', product: null, slug: productSlug });
       }
     };
 
@@ -68,6 +69,10 @@ const CatalogRouter = () => {
         initialProduct={product}
       />
     );
+  }
+
+  if (state === 'not_found') {
+    return <NotFound />;
   }
 
   return <CatalogHierarchicalV2 />;
