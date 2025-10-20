@@ -232,7 +232,7 @@ class SitemapController {
           : new Date().toISOString();
 
         // Build product URL
-        const productUrl = this.buildProductUrl(baseSlug, product.category_path, product.id);
+        const productUrl = this.buildProductUrl(baseSlug, product.category_path);
 
         xml += `
   <url>
@@ -320,9 +320,9 @@ class SitemapController {
   /**
    * Build product URL
    */
-  private buildProductUrl(slug: string, categoryPath: string | null, productId: string): string {
+  private buildProductUrl(slug: string, categoryPath: string | null): string {
     const categoryUrl = this.buildCategoryUrl(categoryPath);
-    return `${categoryUrl}/${slug}?pid=${productId}`;
+    return `${categoryUrl}/${slug}`;
   }
 
   /**

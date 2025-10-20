@@ -3,10 +3,10 @@
  * 
  * URL Structure:
  * - Categories: /catalog/category1/category2/category3
- * - Products: /catalog/category1/category2/product-slug?pid=uuid
+ * - Products: /catalog/category1/category2/product-slug
  * 
- * Note: Product ID is stored in query param 'pid' for reliable loading,
- * while slug is in the path for SEO-friendly URLs
+ * Product details are resolved by slug. Legacy URLs with query params are
+ * redirected to the new structure.
  */
 
 /**
@@ -58,8 +58,17 @@ export function slugify(text: string): string {
 export function buildCategoryPath(fullPath: string | null | undefined): string[] {
   if (!fullPath || typeof fullPath !== 'string') return [];
   
-  return fullPath
-    .split('>')
+  let parts: string[];
+
+  if (fullPath.includes('>')) {
+    parts = fullPath.split('>');
+  } else if (fullPath.includes('/')) {
+    parts = fullPath.split('/');
+  } else {
+    parts = [fullPath];
+  }
+
+  return parts
     .map(part => part.trim())
     .filter(Boolean)
     .map(slugify)
@@ -185,4 +194,3 @@ export function getLastCategoryName(fullPath: string | null | undefined): string
   const parts = fullPath.split('>').map(p => p.trim()).filter(Boolean);
   return parts[parts.length - 1] || '';
 }
-

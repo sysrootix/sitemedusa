@@ -7,14 +7,13 @@ import api, { CatalogPagination } from '../services/api';
 import CategoryBreadcrumbs from '../components/CategoryBreadcrumbs';
 import CategoryCard from '../components/CategoryCard';
 import ShopSelectorModal from '../components/ShopSelectorModal';
-import ProductModal from '../components/ProductModal';
 import CatalogFilters, { FilterOptions } from '../components/CatalogFilters';
 import SkeletonLoader from '../components/SkeletonLoader';
 import { useFavorites } from '../contexts/FavoritesContext';
 import {
   buildProductUrl,
   buildCategoryUrl,
-  parseProductUrl,
+  parseCategoryUrl,
   buildCategoryPath,
   slugify
 } from '../utils/catalogUrl';
@@ -66,27 +65,19 @@ const CatalogHierarchicalV2 = () => {
     inStockOnly: false,
     sortBy: null,
   });
-  // Removed quickViewProduct and showQuickView - using full product modal instead
-  
-  // Full product modal states
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  const [selectedProductSlug, setSelectedProductSlug] = useState<string | null>(null);
-  const [showProductModal, setShowProductModal] = useState(false);
-  
   const { isFavorite, toggleFavorite } = useFavorites();
   
   // Parse URL to get search params
   const searchParams = new URLSearchParams(location.search);
   const pageParam = searchParams.get('page');
   const searchParam = searchParams.get('search');
-  const shopSelectorParam = searchParams.get('shopSelector');
 
   // Check for URL redirects on mount
   useEffect(() => {
-    const { categoryPath } = parseProductUrl(location.pathname);
+    const categorySegments = parseCategoryUrl(location.pathname);
 
-    if (categoryPath.length > 0) {
-      const currentPath = categoryPath.join('/');
+    if (categorySegments.length > 0) {
+      const currentPath = categorySegments.join('/');
       const redirectedPath = checkCategoryRedirect(currentPath);
 
       if (redirectedPath) {
@@ -101,33 +92,11 @@ const CatalogHierarchicalV2 = () => {
 
   // Initialize state from URL on mount
   useEffect(() => {
-    const { categoryPath, productSlug } = parseProductUrl(location.pathname);
-    const productIdParam = searchParams.get('pid'); // Product ID from query param (new format)
-    const legacyProductParam = searchParams.get('product'); // Legacy format support
-
-    // Check for product in URL (new hierarchical format)
-    if (productSlug && productIdParam) {
-      setSelectedProductId(productIdParam);
-      setSelectedProductSlug(null);
-      setShowProductModal(true);
-    }
-    // Check for legacy format (/catalog?product=uuid)
-    else if (legacyProductParam) {
-      setSelectedProductId(legacyProductParam);
-      setSelectedProductSlug(null);
-      setShowProductModal(true);
-    }
-    // Check for old product URL without pid (search by slug)
-    else if (productSlug) {
-      // Old URL format - try to find product by slug
-      console.log('🔍 Old product URL detected, searching by slug:', productSlug);
-      setSelectedProductSlug(productSlug);
-      setSelectedProductId(null);
-      setShowProductModal(true);
-    }
-    // Check for category path
-    else if (categoryPath.length > 0) {
-      setCurrentCategoryPath(categoryPath.join('/'));
+    const categorySegments = parseCategoryUrl(location.pathname);
+    if (categorySegments.length > 0) {
+      setCurrentCategoryPath(categorySegments.join('/'));
+    } else {
+      setCurrentCategoryPath(null);
     }
 
     if (searchParam) {
@@ -145,69 +114,38 @@ const CatalogHierarchicalV2 = () => {
 
   // Sync state with URL changes (for browser back/forward buttons)
   useEffect(() => {
-    const { categoryPath, productSlug } = parseProductUrl(location.pathname);
     const params = new URLSearchParams(location.search);
-    const productIdParam = params.get('pid');
-    const legacyProductParam = params.get('product');
+    const newSearchParam = params.get('search') || '';
+    const newPageParam = params.get('page');
+    const shopSelectorParamValue = params.get('shopSelector');
 
-    // Update category if URL changed
-    const newCategoryPath = categoryPath.length > 0 ? categoryPath.join('/') : null;
+    const categorySegments = parseCategoryUrl(location.pathname);
+    const newCategoryPath = categorySegments.length > 0 ? categorySegments.join('/') : null;
     if (newCategoryPath !== currentCategoryPath) {
       setCurrentCategoryPath(newCategoryPath);
     }
 
-    // Update product modal if URL changed (new format with pid)
-    if (productSlug && productIdParam) {
-      if (productIdParam !== selectedProductId) {
-        setSelectedProductId(productIdParam);
-        setSelectedProductSlug(null);
-        setShowProductModal(true);
+    if (newSearchParam !== searchQuery) {
+      setSearchQuery(newSearchParam);
+    }
+
+    if (newPageParam) {
+      const parsed = parseInt(newPageParam, 10);
+      if (!Number.isNaN(parsed) && parsed !== currentPage) {
+        setCurrentPage(parsed);
       }
+    } else if (currentPage !== 1) {
+      setCurrentPage(1);
     }
-    // Support legacy format (?product=uuid)
-    else if (legacyProductParam) {
-      if (legacyProductParam !== selectedProductId) {
-        setSelectedProductId(legacyProductParam);
-        setSelectedProductSlug(null);
-        setShowProductModal(true);
-      }
-    }
-    // Old product URL without pid (search by slug)
-    else if (productSlug) {
-      if (productSlug !== selectedProductSlug) {
-        console.log('🔍 Old product URL detected in sync, searching by slug:', productSlug);
-        setSelectedProductSlug(productSlug);
-        setSelectedProductId(null);
-        setShowProductModal(true);
-      }
-    }
-    // No product in URL
-    else {
-      if (showProductModal) {
-        setShowProductModal(false);
-        setSelectedProductId(null);
-        setSelectedProductSlug(null);
-      }
-    }
-    
-    // Update search if URL changed
-    if (searchParam && searchParam !== searchQuery) {
-      setSearchQuery(searchParam);
-    } else if (!searchParam && searchQuery) {
-      setSearchQuery('');
-    }
-    
-    // Update shop selector modal if URL changed
-    if (shopSelectorParam === 'true') {
+
+    if (shopSelectorParamValue === 'true') {
       if (!showShopSelector) {
         setShowShopSelector(true);
       }
-    } else {
-      if (showShopSelector) {
-        setShowShopSelector(false);
-      }
+    } else if (showShopSelector) {
+      setShowShopSelector(false);
     }
-  }, [location.pathname, location.search]);
+  }, [location.pathname, location.search, currentCategoryPath, searchQuery, currentPage, showShopSelector]);
 
   // Resolve category path to category ID when path changes
   useEffect(() => {
@@ -448,19 +386,9 @@ const CatalogHierarchicalV2 = () => {
   // Removed handleQuickView - using full product modal instead
 
   const handleProductClick = (product: any) => {
-    // Always use ID for loading, slug only for URL
-    setSelectedProductId(product.id);
-    setSelectedProductSlug(null); // Don't use slug for API calls
-    setShowProductModal(true);
-    
-    // Generate slug for URL (SEO-friendly)
     const productSlug = product.slug || slugify(product.name) || product.id;
-    
-    // Build hierarchical product URL
-    // Try to get category path from product or use current category
+
     let categoryPath = null;
-    
-    // Try different sources for category path
     if (product.characteristics?.full_path && typeof product.characteristics.full_path === 'string') {
       categoryPath = product.characteristics.full_path;
       console.log('📂 Using category path from product:', categoryPath);
@@ -468,43 +396,20 @@ const CatalogHierarchicalV2 = () => {
       categoryPath = product.category_path;
       console.log('📂 Using category_path from product:', categoryPath);
     } else if (product.category_name && typeof product.category_name === 'string') {
-      // Use simple category name if full path not available
       categoryPath = product.category_name;
       console.log('📂 Using category_name from product:', categoryPath);
+    } else if (currentCategoryPath) {
+      categoryPath = currentCategoryPath;
+      console.log('📂 Falling back to current category path:', categoryPath);
     } else {
       console.log('⚠️ No category path found for product, using simple URL');
     }
-    
+
     const productUrl = buildProductUrl(productSlug, categoryPath);
-    console.log('🔗 Generated product URL:', productUrl);
-    
-    // Add product ID as query parameter for reliable loading
-    const params = new URLSearchParams(location.search);
-    params.set('pid', product.id); // Product ID
-    navigate(`${productUrl}?${params.toString()}`);
+    console.log('🔗 Navigating to product URL:', productUrl);
+
+    navigate(productUrl);
   };
-
-  const handleCloseProductModal = () => {
-    setShowProductModal(false);
-    setSelectedProductId(null);
-    setSelectedProductSlug(null);
-    
-    // Navigate back to category or catalog root, remove product ID param
-    const params = new URLSearchParams(location.search);
-    params.delete('pid'); // Remove product ID
-    const newSearch = params.toString();
-    
-    if (currentCategoryPath) {
-      const categoryUrl = buildCategoryUrl(currentCategoryPath);
-      navigate(`${categoryUrl}${newSearch ? `?${newSearch}` : ''}`);
-    } else {
-      navigate(`/catalog${newSearch ? `?${newSearch}` : ''}`);
-    }
-  };
-
-  // Removed handleAddToCart - now always opening ProductModal to select shop and modification
-  // This ensures users select the correct variant before adding to cart
-
   // Apply filters and sorting to products
   const filteredAndSortedProducts = useMemo(() => {
     if (products.length === 0) return [];
@@ -1107,20 +1012,9 @@ const CatalogHierarchicalV2 = () => {
             )}
           </AnimatePresence>
         )}
-
-        {/* Full Product Modal */}
-        {(selectedProductId || selectedProductSlug) && (
-          <ProductModal
-            productId={selectedProductId || undefined}
-            productSlug={selectedProductSlug || undefined}
-            isOpen={showProductModal}
-            onClose={handleCloseProductModal}
-          />
-        )}
       </div>
     </div>
   );
 };
 
 export default CatalogHierarchicalV2;
-

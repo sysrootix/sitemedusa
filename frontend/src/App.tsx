@@ -4,7 +4,8 @@ import Layout from './components/Layout'
 import Home from './pages/Home'
 import Catalog from './pages/Catalog'
 import CatalogHierarchical from './pages/CatalogHierarchical'
-import CatalogHierarchicalV2 from './pages/CatalogHierarchicalV2'
+import CatalogRouter from './pages/CatalogRouter'
+import NotFound from './pages/NotFound'
 import Articles from './pages/Articles'
 import About from './pages/About'
 import Contact from './pages/Contact'
@@ -41,7 +42,7 @@ function App() {
               <Route path="/auth/telegram-handler" element={<TelegramAuthHandler />} />
               <Route path="/" element={<LayoutWrapper />}>
                 <Route index element={<Home />} />
-                <Route path="catalog/*" element={<CatalogHierarchicalV2 />} />
+                <Route path="catalog/*" element={<CatalogRouter />} />
                 <Route path="catalog-v1" element={<CatalogHierarchical />} />
                 <Route path="catalog-old" element={<Catalog />} />
                 <Route path="shops" element={<Shops />} />
@@ -53,6 +54,7 @@ function App() {
                 <Route path="vacancies" element={<Vacancies />} />
                 <Route path="profile" element={<Profile />} />
               </Route>
+              <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster
               position="bottom-right"

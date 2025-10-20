@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion'
 import { ArrowRight, Star } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { Button } from '@/shared/ui'
 import api from '@/services/api'
-import ProductModal from '../ProductModal'
-import { useCart } from '@/contexts/CartContext'
+import toast from 'react-hot-toast'
+import { buildProductUrl, slugify } from '@/utils/catalogUrl'
 
 interface PopularProduct {
   id: string
@@ -23,21 +23,32 @@ interface PopularProduct {
 const PopularProductsBlock = () => {
   const [products, setProducts] = useState<PopularProduct[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     loadPopularProducts()
   }, [])
 
-  const handleProductClick = (productId: string) => {
-    setSelectedProductId(productId)
-    setIsModalOpen(true)
-  }
+  const handleProductClick = async (product: PopularProduct) => {
+    try {
+      const productData = await api.getProductById(product.id)
+      const productSlug = productData.product.slug || slugify(productData.product.name) || product.id
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false)
-    setSelectedProductId(null)
+      let categoryPath: string | null = null
+      if (productData.product.characteristics?.full_path && typeof productData.product.characteristics.full_path === 'string') {
+        categoryPath = productData.product.characteristics.full_path
+      } else if (productData.product.category_path && typeof productData.product.category_path === 'string') {
+        categoryPath = productData.product.category_path
+      } else if (product.category && typeof product.category === 'string') {
+        categoryPath = product.category
+      }
+
+      const productUrl = buildProductUrl(productSlug, categoryPath)
+      navigate(productUrl)
+    } catch (error) {
+      console.error('Failed to open product page:', error)
+      toast.error('Не удалось открыть карточку товара')
+    }
   }
 
   const loadPopularProducts = async () => {
@@ -122,7 +133,7 @@ const PopularProductsBlock = () => {
               transition={{ duration: 0.8, delay: index * 0.15 }}
               viewport={{ once: true }}
               className="group cursor-pointer"
-              onClick={() => handleProductClick(product.id)}
+              onClick={() => handleProductClick(product)}
             >
               <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl transition-all duration-500 border border-gray-200/50 dark:border-gray-700/50 hover:border-purple-300/50 dark:hover:border-purple-500/50">
                 {/* Image */}
@@ -244,15 +255,6 @@ const PopularProductsBlock = () => {
           </Link>
         </motion.div>
       </div>
-
-      {/* Product Modal */}
-      {selectedProductId && (
-        <ProductModal
-          productId={selectedProductId}
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-        />
-      )}
     </section>
   )
 }

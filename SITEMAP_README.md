@@ -71,12 +71,12 @@ FRONTEND_URL=https://site.mda-platform.top
 
 Товары в sitemap имеют полные иерархические URL:
 ```
-https://site.mda-platform.top/catalog/vape_industriya/kartridzhi/product-slug?pid=uuid
+https://site.mda-platform.top/catalog/vape_industriya/kartridzhi/product-slug
 ```
 
 - Slug без суффикса shop_code (для уникальности в sitemap)
 - Категории в иерархическом формате
-- Product ID в query параметре `pid`
+- Загрузка карточки производится по slug без дополнительных параметров
 
 ### 2. Удаление дубликатов
 

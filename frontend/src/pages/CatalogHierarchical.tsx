@@ -1,14 +1,14 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Grid, List, Package, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import api, { CatalogPagination } from '../services/api';
 import CategoryBreadcrumbs from '../components/CategoryBreadcrumbs';
 import CategoryCard from '../components/CategoryCard';
 import ShopSelectorModal from '../components/ShopSelectorModal';
-import ProductModal from '../components/ProductModal';
 import CatalogFilters, { FilterOptions } from '../components/CatalogFilters';
+import { buildProductUrl, slugify } from '../utils/catalogUrl';
 
 interface HierarchicalCategory {
   id: string;
@@ -41,6 +41,7 @@ interface BreadcrumbItem {
 
 const CatalogHierarchical = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentCategoryId, setCurrentCategoryId] = useState<string | null>(null);
@@ -54,8 +55,6 @@ const CatalogHierarchical = () => {
   const [shops, setShops] = useState<Array<{ shop_code: string; shop_name: string; city: string; address: string; product_count: number }>>([]);
   const [showShopSelector, setShowShopSelector] = useState(false);
   const [catalogMode, setCatalogMode] = useState<'general' | 'shop'>('general');
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-  const [showProductModal, setShowProductModal] = useState(false);
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [filters, setFilters] = useState<FilterOptions>({
     minPrice: null,
@@ -196,14 +195,26 @@ const CatalogHierarchical = () => {
     setSearchParams({});
   };
 
-  const handleProductClick = (productId: string) => {
-    setSelectedProductId(productId);
-    setShowProductModal(true);
-  };
+  const handleProductClick = async (product: CategoryProduct) => {
+    try {
+      const productData = await api.getProductById(product.id);
+      const productSlug = productData.product.slug || slugify(productData.product.name || product.name) || product.id;
 
-  const handleCloseProductModal = () => {
-    setShowProductModal(false);
-    setSelectedProductId(null);
+      let categoryPath: string | null = null;
+      if (productData.product.characteristics?.full_path && typeof productData.product.characteristics.full_path === 'string') {
+        categoryPath = productData.product.characteristics.full_path;
+      } else if (productData.product.category_path && typeof productData.product.category_path === 'string') {
+        categoryPath = productData.product.category_path;
+      } else if (product.characteristics?.full_path && typeof product.characteristics.full_path === 'string') {
+        categoryPath = product.characteristics.full_path;
+      }
+
+      const productUrl = buildProductUrl(productSlug, categoryPath);
+      navigate(productUrl);
+    } catch (err) {
+      console.error('Failed to open product page:', err);
+      toast.error('Не удалось открыть карточку товара');
+    }
   };
 
   // Apply filters and sorting to products
@@ -607,7 +618,7 @@ const CatalogHierarchical = () => {
                           <button
                             onClick={() => {
                               if (catalogMode === 'general') {
-                                handleProductClick(product.id);
+                                handleProductClick(product as CategoryProduct);
                               } else {
                                 toast.success('Товар добавлен в корзину', {
                                   icon: '🛒',
@@ -693,19 +704,9 @@ const CatalogHierarchical = () => {
             )}
           </AnimatePresence>
         )}
-
-        {/* Product Modal */}
-        {selectedProductId && (
-          <ProductModal
-            productId={selectedProductId}
-            isOpen={showProductModal}
-            onClose={handleCloseProductModal}
-          />
-        )}
       </div>
     </div>
   );
 };
 
 export default CatalogHierarchical;
-

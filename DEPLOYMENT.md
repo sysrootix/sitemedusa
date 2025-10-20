@@ -266,7 +266,7 @@ https://mda-medusa.ru/catalog/vape_industriya/kartridzhi_ispariteli/kartridzhi/p
 
 **Автоматически преобразуется в:**
 ```
-https://site.mda-platform.top/catalog/vape_industriya/kartridzhi_ispariteli_dlya_pod-sistem/kartridzhi/product-slug?pid=xxx
+https://site.mda-platform.top/catalog/vape_industriya/kartridzhi_ispariteli_dlya_pod-sistem/kartridzhi/product-slug
 ```
 
 Подробная документация: см. `URL_REDIRECTS_README.md`

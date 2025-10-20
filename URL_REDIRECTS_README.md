@@ -62,7 +62,7 @@ https://mda-medusa.ru/catalog/vape_industriya/kartridzhi_ispariteli/kartridzhi/k
 
 **Финальный URL:**
 ```
-https://site.mda-platform.top/catalog/vape_industriya/kartridzhi_ispariteli_dlya_pod-sistem/kartridzhi/kartridzh_justfog_minifit_s_0_2_om_1_9_ml?pid=b814e480-0347-11ed-b781-00e04cb50794
+https://site.mda-platform.top/catalog/vape_industriya/kartridzhi_ispariteli_dlya_pod-sistem/kartridzhi/kartridzh_justfog_minifit_s_0_2_om_1_9_ml
 ```
 
 ## Как добавить новые редиректы

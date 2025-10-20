@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { customToast } from '@/utils/toast'
+import { buildProductUrl, slugify } from '@/utils/catalogUrl'
 import { Menu, X, ShoppingCart, Search, LogIn, User as UserIcon, LogOut, ChevronDown, Trash2, Minus, Plus, PackageX, Heart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -8,7 +9,6 @@ import { AuthModal, Modal } from '@/shared/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/contexts/CartContext'
 import { useFavorites } from '@/contexts/FavoritesContext'
-import ProductModal from './ProductModal'
 import apiService from '@/services/api'
 
 const Header = () => {
@@ -24,7 +24,6 @@ const Header = () => {
   const [clickedItem, setClickedItem] = useState<string | null>(null)
   const [selectedCartItems, setSelectedCartItems] = useState<Set<string>>(new Set())
   const [selectedFavoriteItems, setSelectedFavoriteItems] = useState<Set<string>>(new Set())
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
   const location = useLocation()
   const navigate = useNavigate()
   const { user, isAuthenticated, logout, isLoading} = useAuth()
@@ -34,6 +33,29 @@ const Header = () => {
 
   const handleSearchClick = () => {
     navigate('/catalog')
+  }
+
+  const openProductById = async (productId: string, fallbackName?: string, fallbackCategory?: string) => {
+    try {
+      const productData = await apiService.getProductById(productId)
+      const productSlug = productData.product.slug || slugify(productData.product.name || fallbackName || productId) || productId
+
+      let categoryPath: string | null = null
+
+      if (productData.product.characteristics?.full_path && typeof productData.product.characteristics.full_path === 'string') {
+        categoryPath = productData.product.characteristics.full_path
+      } else if (productData.product.category_path && typeof productData.product.category_path === 'string') {
+        categoryPath = productData.product.category_path
+      } else if (fallbackCategory) {
+        categoryPath = fallbackCategory
+      }
+
+      const productUrl = buildProductUrl(productSlug, categoryPath)
+      navigate(productUrl)
+    } catch (error) {
+      console.error('Failed to open product page:', error)
+      customToast.error('Не удалось открыть карточку товара')
+    }
   }
 
   const handleCartClick = () => {
@@ -1141,7 +1163,11 @@ const Header = () => {
                     const target = e.target as HTMLElement;
                     if (!target.closest('input') && !target.closest('button[data-action]') && !target.closest('button') && !target.closest('label')) {
                       if (item.product?.id) {
-                        setSelectedProductId(item.product.id)
+                        openProductById(
+                          item.product.id,
+                          item.product?.name,
+                          item.product?.characteristics?.full_path || item.product?.category_path
+                        )
                       }
                     }
                   }}
@@ -1404,7 +1430,11 @@ const Header = () => {
                     // Prevent opening modal if clicking on checkbox or delete button
                     const target = e.target as HTMLElement;
                     if (!target.closest('input') && !target.closest('button[data-action]')) {
-                      setSelectedProductId(item.product_id)
+                      openProductById(
+                        item.product_id,
+                        item.product_name,
+                        item.product?.characteristics?.full_path || item.category_path || item.product?.category_path
+                      )
                     }
                   }}
                 >
@@ -1505,15 +1535,6 @@ const Header = () => {
         )}
       </div>
     </Modal>
-
-    {/* Product Modal */}
-    {selectedProductId && (
-      <ProductModal
-        productId={selectedProductId}
-        isOpen={!!selectedProductId}
-        onClose={() => setSelectedProductId(null)}
-      />
-    )}
     </>
   )
 }
