@@ -1,0 +1,639 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    scroll-behavior: smooth;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  
+  body {
+    @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  * {
+    @apply scroll-smooth;
+  }
+  
+  /* Улучшенная типографика */
+  h1, h2, h3, h4, h5, h6 {
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1, 'pnum' 1;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
+  
+  p {
+    line-height: 1.7;
+    color: rgb(75 85 99 / 0.9);
+  }
+  
+  .dark p {
+    color: rgb(209 213 219 / 0.9);
+  }
+  
+  /* Улучшенная плавная прокрутка для всех браузеров */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+  
+  /* Оптимизация для высокоплотностных экранов */
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    body {
+      -webkit-font-smoothing: subpixel-antialiased;
+    }
+  }
+}
+
+@layer components {
+  /* Улучшенные кнопки с лучшей доступностью */
+  .btn-primary {
+    @apply relative bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl font-semibold 
+           transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-500/50 
+           shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:scale-95
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:scale-100;
+  }
+  
+  .btn-primary::before {
+    @apply absolute inset-0 bg-gradient-to-r from-purple-500 to-purple-700 rounded-xl opacity-0 
+           transition-opacity duration-300;
+    content: '';
+    z-index: -1;
+  }
+  
+  .btn-primary:hover::before {
+    @apply opacity-100;
+  }
+  
+  .btn-secondary {
+    @apply relative bg-white dark:bg-gray-800 hover:bg-purple-50 dark:hover:bg-purple-900/20 
+           text-purple-600 dark:text-purple-400 px-6 py-3 rounded-xl font-semibold 
+           border-2 border-purple-600 dark:border-purple-400 
+           transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-500/50
+           shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:scale-95
+           hover:border-purple-700 dark:hover:border-purple-300;
+  }
+  
+  .btn-ghost {
+    @apply bg-transparent hover:bg-purple-50 dark:hover:bg-purple-900/20 
+           text-purple-600 dark:text-purple-400 px-6 py-3 rounded-xl font-semibold 
+           transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-purple-500/50
+           hover:-translate-y-0.5 active:translate-y-0 active:scale-95;
+  }
+  
+  .btn-small {
+    @apply px-4 py-2 text-sm;
+  }
+  
+  .btn-large {
+    @apply px-8 py-4 text-lg;
+  }
+  
+  /* Улучшенный контейнер с лучшими отступами */
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-4;
+  }
+  
+  /* Улучшенные градиенты */
+  .gradient-purple {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 50%, #6d28d9 100%);
+  }
+  
+  .gradient-dark {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 50%, #030712 100%);
+  }
+  
+  /* Карточки с улучшенными тенями */
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 
+           transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+  }
+  
+  .card-interactive {
+    @apply card hover:border-purple-200 dark:hover:border-purple-600 cursor-pointer;
+  }
+  
+  /* Улучшенные инпуты */
+  .input {
+    @apply w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 
+           bg-white dark:bg-gray-800 text-gray-900 dark:text-white 
+           rounded-xl transition-all duration-300
+           focus:outline-none focus:ring-4 focus:ring-purple-500/50 
+           focus:border-purple-500 dark:focus:border-purple-400
+           placeholder-gray-400 dark:placeholder-gray-500;
+  }
+  
+  /* Текстовая иерархия с новыми шрифтами */
+  .text-display {
+    @apply text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight font-heading;
+  }
+
+  .text-heading {
+    @apply text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight font-heading;
+  }
+
+  .text-subheading {
+    @apply text-lg md:text-xl font-semibold tracking-tight font-heading;
+  }
+
+  .text-body {
+    @apply text-base leading-relaxed font-body;
+  }
+  
+  .text-caption {
+    @apply text-sm text-gray-600 dark:text-gray-400;
+  }
+  
+  /* Мобильные оптимизации */
+  @media (max-width: 768px) {
+    .container-custom {
+      @apply px-4;
+    }
+
+    .text-display {
+      @apply text-3xl md:text-4xl font-bold font-heading;
+      line-height: 1.1;
+    }
+
+    .text-heading {
+      @apply text-xl md:text-2xl font-bold font-heading;
+      line-height: 1.2;
+    }
+
+    /* Улучшенные touch targets */
+    button, a, [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Улучшенная типографика для мобильных */
+    h1, h2, h3 {
+      line-height: 1.2;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    /* Оптимизированные карточки для мобильных */
+    .card {
+      @apply rounded-2xl;
+      margin-bottom: 1rem;
+    }
+
+    .card-interactive {
+      @apply hover:scale-100; /* Отключаем масштабирование на мобильных */
+    }
+
+    /* Улучшенные отступы для мобильных */
+    .mobile-spacing {
+      @apply space-y-6;
+    }
+
+    .mobile-padding {
+      @apply p-4;
+    }
+
+    /* Оптимизация изображений для мобильных */
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Улучшенные формы для мобильных */
+    input, textarea, select {
+      font-size: 16px; /* Предотвращает зум на iOS */
+      min-height: 44px;
+    }
+
+    /* Улучшенные таблицы для мобильных */
+    table {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+
+    /* Оптимизация видео для мобильных */
+    video {
+      width: 100%;
+      height: auto;
+    }
+  }
+  
+  /* Специальные стили для очень маленьких экранов */
+  @media (max-width: 480px) {
+    .container-custom {
+      @apply px-3;
+    }
+
+    .text-display {
+      @apply text-2xl font-bold font-heading;
+    }
+
+    .btn-primary, .btn-secondary, .btn-ghost {
+      @apply px-4 py-3 text-base;
+      min-height: 48px; /* Еще больше для маленьких экранов */
+    }
+
+    /* Уменьшенные отступы для маленьких экранов */
+    .py-12 {
+      padding-top: 2rem;
+      padding-bottom: 2rem;
+    }
+
+    .py-16 {
+      padding-top: 3rem;
+      padding-bottom: 3rem;
+    }
+
+    /* Упрощенные анимации на маленьких экранах */
+    .animate-spin {
+      animation-duration: 1s;
+    }
+
+    /* Оптимизация карточек для очень маленьких экранов */
+    .card {
+      @apply p-4;
+      margin-bottom: 0.75rem;
+    }
+
+    /* Улучшенная читаемость текста */
+    .text-xs {
+      font-size: 0.75rem;
+      line-height: 1rem;
+    }
+
+    .text-sm {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+
+    /* Оптимизация иконок */
+    .w-5, .h-5 {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .w-6, .h-6 {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+  }
+  
+  /* Оптимизация для планшетов */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .container-custom {
+      @apply px-6;
+    }
+  }
+  
+  /* Анимации с учетом предпочтений пользователя */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  
+  /* Улучшенный фокус для доступности */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-4 focus:ring-purple-500/50 focus:ring-offset-2;
+  }
+  
+  /* Стили для темной темы с лучшим контрастом */
+  .dark .text-high-contrast {
+    color: #ffffff;
+  }
+  
+  .dark .text-medium-contrast {
+    color: #e5e7eb;
+  }
+  
+  .dark .text-low-contrast {
+    color: #9ca3af;
+  }
+
+  /* Шрифты для конкретных элементов */
+  .font-display {
+    font-family: 'Unbounded', 'Sora', 'Inter', system-ui, sans-serif;
+  }
+
+  .font-heading {
+    font-family: 'Unbounded', 'Sora', 'Inter', system-ui, sans-serif;
+  }
+
+  .font-body {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  .font-accent {
+    font-family: 'Sora', 'Inter', system-ui, sans-serif;
+  }
+
+  /* Улучшенная типографика для новых шрифтов */
+  .font-heading h1, .font-heading h2, .font-heading h3, .font-heading h4, .font-heading h5, .font-heading h6 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .font-body p, .font-body li, .font-body dd {
+    font-weight: 400;
+    line-height: 1.7;
+  }
+
+  .font-accent {
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  /* Специальные стили для разных весов шрифтов */
+  .font-light {
+    font-weight: 300;
+  }
+
+  .font-normal {
+    font-weight: 400;
+  }
+
+  .font-medium {
+    font-weight: 500;
+  }
+
+  .font-semibold {
+    font-weight: 600;
+  }
+
+  .font-bold {
+    font-weight: 700;
+  }
+
+  /* Плавные переходы между блоками */
+  .block-transition {
+    position: relative;
+  }
+
+  .block-transition::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.3), transparent);
+    opacity: 0;
+    animation: fadeInOut 3s ease-in-out infinite;
+  }
+
+  .block-transition::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.3), transparent);
+    opacity: 0;
+    animation: fadeInOut 3s ease-in-out 1.5s infinite;
+  }
+
+  @keyframes fadeInOut {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 0.6; }
+  }
+
+  /* Улучшенные разделители между блоками */
+  .section-divider {
+    position: relative;
+    height: 80px;
+    overflow: hidden;
+    background: linear-gradient(
+      180deg,
+      rgba(17, 24, 39, 0.1) 0%,
+      rgba(168, 85, 247, 0.05) 50%,
+      rgba(17, 24, 39, 0.1) 100%
+    );
+  }
+
+  .section-divider::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(
+      180deg,
+      rgba(17, 24, 39, 0.8) 0%,
+      rgba(17, 24, 39, 0.4) 50%,
+      transparent 100%
+    );
+  }
+
+  .section-divider::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(17, 24, 39, 0.4) 50%,
+      rgba(17, 24, 39, 0.8) 100%
+    );
+  }
+
+  /* Плавные градиентные переходы */
+  .gradient-transition-top {
+    background: linear-gradient(
+      180deg,
+      rgba(17, 24, 39, 0.9) 0%,
+      rgba(17, 24, 39, 0.7) 30%,
+      rgba(17, 24, 39, 0.4) 70%,
+      transparent 100%
+    );
+  }
+
+  .gradient-transition-bottom {
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(17, 24, 39, 0.4) 30%,
+      rgba(17, 24, 39, 0.7) 70%,
+      rgba(17, 24, 39, 0.9) 100%
+    );
+  }
+
+  /* Анимированные разделители */
+  .animated-divider {
+    position: relative;
+    height: 60px;
+    background: linear-gradient(45deg, transparent 30%, rgba(168, 85, 247, 0.1) 50%, transparent 70%);
+    background-size: 200% 200%;
+    animation: shimmer 4s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* Темные разделители для контраста */
+  .dark-divider {
+    background: linear-gradient(
+      135deg,
+      rgba(17, 24, 39, 0.95) 0%,
+      rgba(88, 28, 135, 0.3) 50%,
+      rgba(17, 24, 39, 0.95) 100%
+    );
+  }
+
+  /* Скрыть scrollbar но оставить возможность прокрутки */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+
+  /* Toast Notifications - Ограничение до 1 уведомления */
+  .toast-container-limit > div:nth-child(n+2) {
+    display: none !important;
+  }
+
+  /* Улучшенная анимация появления toast */
+  [data-sonner-toast] {
+    animation: toastSlideIn 0.4s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+    transform-origin: top center;
+  }
+
+  @keyframes toastSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Анимация выхода toast */
+  [data-sonner-toast][data-removed="true"] {
+    animation: toastSlideOut 0.3s ease-in forwards;
+  }
+
+  @keyframes toastSlideOut {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.9);
+    }
+  }
+
+  /* ============================================ */
+  /* TOAST УВЕДОМЛЕНИЯ - Минимализм 🎯 */
+  /* ============================================ */
+  
+  /* Простая анимация появления */
+  @keyframes toast-slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  /* Простая анимация исчезновения */
+  @keyframes toast-slide-out {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+  }
+  
+  /* Контейнер */
+  .toast-container-minimal {
+    pointer-events: none;
+  }
+  
+  .toast-container-minimal > div {
+    pointer-events: auto;
+  }
+  
+  /* Минималистичный стиль */
+  .toast-minimal {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    backdrop-filter: blur(10px);
+    animation: toast-slide-in 0.2s ease-out;
+    transition: all 0.2s ease;
+  }
+  
+  /* Тонкий hover эффект */
+  .toast-minimal:hover {
+    transform: translateX(-4px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+  }
+  
+  /* Иконки - компактные */
+  .toast-minimal > div:first-child {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Текст */
+  .toast-minimal > div:last-child {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  
+  /* Адаптив для мобильных */
+  @media (max-width: 640px) {
+    .toast-minimal {
+      max-width: calc(100vw - 32px) !important;
+      margin: 0 16px;
+    }
+    
+    .toast-container-minimal {
+      right: 0 !important;
+      bottom: 16px !important;
+    }
+  }
+  
+  /* Убираем стандартные стили */
+  div[role="status"] {
+    animation: none !important;
+  }
+}
