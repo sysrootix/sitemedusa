@@ -391,9 +391,10 @@ const CatalogHierarchicalV2 = () => {
       return;
     }
 
-    setOpeningProductId(product.id || null);
-
-    const productSlug = product.slug || slugify(product.name) || product.id;
+    const productSlugFallback = slugify(product.name) || product.id;
+    const productSlug = product.slug || productSlugFallback;
+    const loadingKey = product.id || productSlug;
+    setOpeningProductId(loadingKey || null);
 
     let categoryPath = null;
     let resolvedSlug = productSlug;
@@ -416,20 +417,23 @@ const CatalogHierarchicalV2 = () => {
     }
 
     try {
-      if (!product.slug && product.id) {
+      if (product.id) {
         productData = await api.getProductById(product.id);
-        if (productData?.product?.slug) {
-          resolvedSlug = productData.product.slug;
-        }
+      } else if (product.slug) {
+        productData = await api.tryGetProductBySlug(product.slug);
+      }
 
-        if (!categoryPath) {
-          const fromCharacteristics = productData?.product?.characteristics?.full_path;
-          const fromCategoryPath = productData?.product?.category_path;
-          categoryPath =
-            (typeof fromCharacteristics === 'string' && fromCharacteristics) ||
-            (typeof fromCategoryPath === 'string' && fromCategoryPath) ||
-            categoryPath;
-        }
+      if (productData?.product?.slug) {
+        resolvedSlug = productData.product.slug;
+      }
+
+      if (!categoryPath && productData?.product) {
+        const fromCharacteristics = productData.product.characteristics?.full_path;
+        const fromCategoryPath = (productData.product as any)?.category_path;
+        categoryPath =
+          (typeof fromCharacteristics === 'string' && fromCharacteristics) ||
+          (typeof fromCategoryPath === 'string' && fromCategoryPath) ||
+          categoryPath;
       }
 
       const productUrl = buildProductUrl(resolvedSlug, categoryPath);

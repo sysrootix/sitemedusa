@@ -30,6 +30,8 @@ const ProductModal = ({
   const [selectedModifications, setSelectedModifications] = useState<{ [shopCode: string]: string }>({});
   const [showAllModifications, setShowAllModifications] = useState<{ [shopCode: string]: boolean }>({});
 
+  const isPageMode = displayMode === 'page';
+
   const { addToCart } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
   const { product, loading, error } = useProductDetails({
@@ -106,8 +108,6 @@ const ProductModal = ({
       onClose();
     }
   };
-
-  const isPageMode = displayMode === 'page';
 
   const cardClasses = isPageMode
     ? 'relative w-full bg-white dark:bg-gray-900 rounded-3xl md:rounded-[28px] border border-gray-200/60 dark:border-gray-800 shadow-2xl overflow-hidden'
