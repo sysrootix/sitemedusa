@@ -5,7 +5,7 @@ import ProductPage from './ProductPage';
 import SkeletonLoader from '../components/SkeletonLoader';
 import api from '../services/api';
 import type { ProductDetailsData } from '../hooks/useProductDetails';
-import { parseProductUrl } from '../utils/catalogUrl';
+import { parseProductUrl, buildProductUrl } from '../utils/catalogUrl';
 
 const CatalogRouter = () => {
   const location = useLocation();
@@ -37,6 +37,17 @@ const CatalogRouter = () => {
         if (cancelled) return;
 
         if (data) {
+          const backendSlug = data.product?.slug;
+          if (backendSlug && backendSlug !== productSlug) {
+            const canonicalPath = buildProductUrl(
+              backendSlug,
+              data.product?.characteristics?.full_path || data.product?.category_path || (categoryPath.length > 0 ? categoryPath.join('/') : null)
+            );
+            console.log('[CatalogRouter] Slug mismatch detected. Redirecting to canonical path:', canonicalPath);
+            navigate(canonicalPath, { replace: true });
+            return;
+          }
+
           console.log('[CatalogRouter] Product resolved, showing product page:', data.product?.id);
           setRouteState({ state: 'product', product: data, slug: productSlug });
         } else {
@@ -55,7 +66,7 @@ const CatalogRouter = () => {
     return () => {
       cancelled = true;
     };
-  }, [productSlug, location.pathname]);
+  }, [productSlug, location.pathname, categoryPath, navigate]);
 
   useEffect(() => {
     if (state === 'not_found') {
