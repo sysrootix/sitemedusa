@@ -719,6 +719,7 @@ class CatalogController {
           'shop_code',
           'category_id',
           'name',
+          'slug',
           'quanty',
           'retail_price',
           'characteristics',
