@@ -20,23 +20,32 @@ const CatalogRouter = () => {
   useEffect(() => {
     let cancelled = false;
 
-    if (!productSlug) {
-      setRouteState({ state: 'category', product: null, slug: null });
-      return;
-    }
-
-    setRouteState({ state: 'loading', product: null, slug: productSlug });
-
-    api.getProductBySlug(productSlug)
-      .then((data) => {
-        if (cancelled) return;
-        setRouteState({ state: 'product', product: data, slug: productSlug });
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        console.warn('Product not found for slug, falling back to catalog view:', productSlug, err);
+    const resolveRoute = async () => {
+      if (!productSlug) {
         setRouteState({ state: 'category', product: null, slug: null });
-      });
+        return;
+      }
+
+      setRouteState({ state: 'loading', product: null, slug: productSlug });
+
+      try {
+        const data = await api.tryGetProductBySlug(productSlug);
+
+        if (cancelled) return;
+
+        if (data) {
+          setRouteState({ state: 'product', product: data, slug: productSlug });
+        } else {
+          setRouteState({ state: 'category', product: null, slug: null });
+        }
+      } catch (err) {
+        if (cancelled) return;
+        console.warn('Product lookup failed, falling back to catalog view:', productSlug, err);
+        setRouteState({ state: 'category', product: null, slug: null });
+      }
+    };
+
+    resolveRoute();
 
     return () => {
       cancelled = true;

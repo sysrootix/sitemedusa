@@ -742,6 +742,41 @@ class ApiService {
     return response.data.data!;
   }
 
+  async tryGetProductBySlug(slug: string) {
+    const response: AxiosResponse<ApiResponse<{
+      product: {
+        id: string;
+        name: string;
+        slug?: string;
+        category_id?: string;
+        characteristics?: any;
+        modifications?: any;
+      };
+      shops: Array<{
+        shop_code: string;
+        slug?: string;
+        shop_name: string;
+        city: string;
+        address: string;
+        quantity: number | null;
+        price: number | null;
+        modifications?: any;
+        available: boolean;
+      }>;
+      total_quantity: number;
+      min_price: number;
+      max_price: number;
+    }>> = await this.api.get(`/catalog/products/slug/${slug}`, {
+      validateStatus: status => (status >= 200 && status < 300) || status === 404,
+    });
+
+    if (response.status === 404 || !response.data.success || !response.data.data) {
+      return null;
+    }
+
+    return response.data.data;
+  }
+
   // Catalog Shops API methods (new structure with shop-based catalog)
   async getLegacyCatalogShops(params?: { city?: string }) {
     const response: AxiosResponse<ApiResponse<{ shops: Shop[] }>> = await this.api.get('/catalog-shops/shops', { params });
