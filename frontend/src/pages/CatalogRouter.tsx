@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import CatalogHierarchicalV2 from './CatalogHierarchicalV2';
 import ProductPage from './ProductPage';
@@ -30,7 +30,10 @@ const CatalogRouter = () => {
     slug: string | null;
   }>({ state: 'category', product: null, slug: null });
 
-  const { categoryPath, productSlug } = parseProductUrl(location.pathname);
+  const { categoryPath, productSlug } = useMemo(
+    () => parseProductUrl(location.pathname),
+    [location.pathname]
+  );
 
   useEffect(() => {
     let cancelled = false;
