@@ -415,30 +415,6 @@ const ProductModal = ({
             )}
 
             {/* Modifications */}
-            {product.product.modifications && Array.isArray(product.product.modifications) && product.product.modifications.length > 0 && (
-              <div className="mt-8 p-6 bg-gray-50 dark:bg-gray-700/50 rounded-2xl">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                  Варианты
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {product.product.modifications.map((mod: any, index: number) => (
-                    <div
-                      key={index}
-                      className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600"
-                    >
-                      <div className="font-medium text-gray-900 dark:text-white text-sm">
-                        {mod.name}
-                      </div>
-                      {mod.retail_price && (
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          {Math.round(mod.retail_price).toLocaleString('ru-RU')} ₽
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         ) : (
           <div className="p-8 text-center text-gray-600 dark:text-gray-400">
