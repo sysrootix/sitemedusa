@@ -26,6 +26,14 @@ export const categoryRedirects: Record<string, string> = {
  * @returns Redirected path if found, null otherwise
  */
 export function checkCategoryRedirect(categoryPath: string): string | null {
+  // First check if the path already contains the new path (avoid double redirect)
+  for (const [oldPath, newPath] of Object.entries(categoryRedirects)) {
+    if (categoryPath.includes(newPath)) {
+      console.log('⚠️ Path already contains new path, skipping redirect:', categoryPath);
+      return null;
+    }
+  }
+
   // Direct match
   if (categoryRedirects[categoryPath]) {
     return categoryRedirects[categoryPath];
@@ -36,13 +44,8 @@ export function checkCategoryRedirect(categoryPath: string): string | null {
   for (const [oldPath, newPath] of Object.entries(categoryRedirects)) {
     // Check if path starts with old path followed by / (to avoid partial matches)
     const oldPathWithSlash = oldPath + '/';
-    const newPathWithSlash = newPath + '/';
 
     if (categoryPath.startsWith(oldPathWithSlash)) {
-      // Skip if already using new path (avoid double redirect)
-      if (categoryPath.startsWith(newPathWithSlash)) {
-        continue;
-      }
       // Replace only the beginning part
       return newPath + categoryPath.substring(oldPath.length);
     }

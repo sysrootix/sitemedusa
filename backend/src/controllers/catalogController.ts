@@ -326,13 +326,28 @@ class CatalogController {
       const { slug } = req.params;
 
       // Find product by slug in catalog_items
-      const item = await CatalogItem.findOne({
+      // First try exact match
+      let item = await CatalogItem.findOne({
         where: { slug, is_active: true },
         attributes: [
           'id', 'shop_code', 'category_id', 'name', 'slug',
           'quanty', 'retail_price', 'characteristics', 'modifications'
         ]
       });
+
+      // If not found by exact match, try finding by slug prefix (for old URLs without shop_code)
+      if (!item) {
+        item = await CatalogItem.findOne({
+          where: {
+            slug: { [Op.like]: `${slug}_%` }, // Match slug that starts with given slug + _
+            is_active: true
+          },
+          attributes: [
+            'id', 'shop_code', 'category_id', 'name', 'slug',
+            'quanty', 'retail_price', 'characteristics', 'modifications'
+          ]
+        });
+      }
 
       if (!item) {
         res.status(404).json({

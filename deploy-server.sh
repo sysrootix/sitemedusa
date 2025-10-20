@@ -58,7 +58,7 @@ fi
 
 # Шаг 1: Получение изменений из Git
 echo ""
-print_info "Шаг 1/7: Получение изменений из Git"
+print_info "Шаг 1/8: Получение изменений из Git"
 echo "-----------------------------------"
 
 if [ -d ".git" ]; then
@@ -87,7 +87,7 @@ fi
 
 # Шаг 2: Установка зависимостей Backend
 echo ""
-print_info "Шаг 2/7: Установка зависимостей Backend"
+print_info "Шаг 2/8: Установка зависимостей Backend"
 echo "---------------------------------------"
 
 cd backend
@@ -106,7 +106,7 @@ cd ..
 
 # Шаг 3: Установка зависимостей Frontend
 echo ""
-print_info "Шаг 3/7: Установка зависимостей Frontend"
+print_info "Шаг 3/8: Установка зависимостей Frontend"
 echo "---------------------------------------"
 
 cd frontend
@@ -125,7 +125,7 @@ cd ..
 
 # Шаг 4: Сборка Backend
 echo ""
-print_info "Шаг 4/7: Сборка Backend"
+print_info "Шаг 4/8: Сборка Backend"
 echo "----------------------"
 
 cd backend
@@ -138,11 +138,18 @@ npm run build || {
 
 print_success "Backend собран"
 
+# Шаг 5: Генерация slug для товаров
+echo ""
+print_info "Генерация slug для товаров (если нужно)..."
+ts-node -r tsconfig-paths/register src/scripts/generateProductSlugs.ts || {
+    print_warning "Не удалось запустить генерацию slug (возможно, уже есть)"
+}
+
 cd ..
 
-# Шаг 5: Сборка Frontend
+# Шаг 6: Сборка Frontend
 echo ""
-print_info "Шаг 5/7: Сборка Frontend"
+print_info "Шаг 6/8: Сборка Frontend"
 echo "-----------------------"
 
 cd frontend
@@ -157,9 +164,9 @@ print_success "Frontend собран"
 
 cd ..
 
-# Шаг 6: Проверка PM2
+# Шаг 7: Проверка PM2
 echo ""
-print_info "Шаг 6/7: Управление PM2"
+print_info "Шаг 7/8: Управление PM2"
 echo "----------------------"
 
 if ! command -v pm2 &> /dev/null; then
@@ -172,9 +179,9 @@ if ! command -v pm2 &> /dev/null; then
     print_success "PM2 установлен"
 fi
 
-# Шаг 7: Перезапуск приложений
+# Шаг 8: Перезапуск приложений
 echo ""
-print_info "Шаг 7/7: Перезапуск приложений"
+print_info "Шаг 8/8: Перезапуск приложений"
 echo "-----------------------------"
 
 # Проверить, запущены ли процессы

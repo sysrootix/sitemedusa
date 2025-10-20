@@ -89,6 +89,13 @@ export const categoryRedirects: Record<string, string> = {
 
 ## Технические детали
 
+### Backend: Генерация slug для товаров
+
+Товары имеют slug в формате: `product_name_SHOPCODE`
+- Скрипт: `backend/src/scripts/generateProductSlugs.ts`
+- Автоматически запускается при деплое
+- Поддерживает поиск по slug без shop_code (для старых URL)
+
 ### Функция `checkCategoryRedirect`
 
 Проверяет URL на необходимость редиректа:

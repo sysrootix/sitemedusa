@@ -92,9 +92,10 @@ cd /path/to/sitemda
 2. ✅ Установка зависимостей backend (`npm install`)
 3. ✅ Установка зависимостей frontend (`npm install`)
 4. ✅ Сборка backend (`npm run build`)
-5. ✅ Сборка frontend (`npm run build`)
-6. ✅ Установка PM2 (если не установлен)
-7. ✅ Перезапуск приложений через PM2
+5. ✅ Генерация slug для товаров (если нужно)
+6. ✅ Сборка frontend (`npm run build`)
+7. ✅ Установка PM2 (если не установлен)
+8. ✅ Перезапуск приложений через PM2
 
 ### Режимы запуска
 
@@ -241,10 +242,20 @@ npm run build
 - `URL_REDIRECTS_README.md` - Подробная документация системы редиректов
 
 #### Изменения в существующих файлах:
+
+**Frontend:**
 - `frontend/src/pages/CatalogHierarchicalV2.tsx` - Добавлена логика:
   - Автоматический редирект старых путей категорий
   - Поиск товаров по slug (для URL без параметра `pid`)
   - Синхронизация с браузерной навигацией
+
+**Backend:**
+- `backend/src/controllers/catalogController.ts` - Улучшен поиск по slug:
+  - Сначала точное совпадение
+  - Fallback: поиск по началу slug (для старых URL без shop_code)
+
+**Deploy:**
+- `deploy-server.sh` - Добавлен шаг генерации slug для товаров
 
 #### Как работает:
 
