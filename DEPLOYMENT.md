@@ -232,16 +232,41 @@ npm run build
 
 ## Изменения в последнем деплое
 
-### URL Redirects для категорий
-Добавлена система редиректов для старых URL категорий:
-- Файл: `frontend/src/utils/urlRedirects.ts`
-- Автоматический редирект со старых путей на новые
-- Например: `/catalog/vape_industriya/kartridzhi_ispariteli/...` → `/catalog/vape_industriya/kartridzhi_ispariteli_dlya_pod-sistem/...`
+### URL Redirects для категорий и товаров
 
-Чтобы добавить новые редиректы, отредактируйте `frontend/src/utils/urlRedirects.ts`:
+Добавлена полная система редиректов для старых URL:
+
+#### Новые файлы:
+- `frontend/src/utils/urlRedirects.ts` - Конфигурация редиректов
+- `URL_REDIRECTS_README.md` - Подробная документация системы редиректов
+
+#### Изменения в существующих файлах:
+- `frontend/src/pages/CatalogHierarchicalV2.tsx` - Добавлена логика:
+  - Автоматический редирект старых путей категорий
+  - Поиск товаров по slug (для URL без параметра `pid`)
+  - Синхронизация с браузерной навигацией
+
+#### Как работает:
+
+**Старый URL товара:**
+```
+https://mda-medusa.ru/catalog/vape_industriya/kartridzhi_ispariteli/kartridzhi/product-slug/
+```
+
+**Автоматически преобразуется в:**
+```
+https://site.mda-platform.top/catalog/vape_industriya/kartridzhi_ispariteli_dlya_pod-sistem/kartridzhi/product-slug?pid=xxx
+```
+
+Подробная документация: см. `URL_REDIRECTS_README.md`
+
+#### Добавление новых редиректов:
+
+Отредактируйте `frontend/src/utils/urlRedirects.ts`:
 ```typescript
 export const categoryRedirects: Record<string, string> = {
+  // Более специфичные пути ПЕРВЫМИ
+  'old/specific/path': 'new/specific/path',
   'old/path': 'new/path',
-  // добавьте свои редиректы здесь
 };
 ```

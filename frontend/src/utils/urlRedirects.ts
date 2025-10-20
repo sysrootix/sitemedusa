@@ -12,6 +12,8 @@
  */
 export const categoryRedirects: Record<string, string> = {
   // Картриджи испарители -> Картриджи испарители для под-систем
+  // Важно: более специфичные пути должны быть ПЕРВЫМИ
+  'vape_industriya/kartridzhi_ispariteli/kartridzhi': 'vape_industriya/kartridzhi_ispariteli_dlya_pod-sistem/kartridzhi',
   'vape_industriya/kartridzhi_ispariteli': 'vape_industriya/kartridzhi_ispariteli_dlya_pod-sistem',
 
   // Можно добавить другие редиректы здесь
@@ -32,9 +34,17 @@ export function checkCategoryRedirect(categoryPath: string): string | null {
   // Check if any part of the path needs redirecting
   // This handles cases where the URL has product slug at the end
   for (const [oldPath, newPath] of Object.entries(categoryRedirects)) {
-    if (categoryPath.startsWith(oldPath)) {
-      // Replace the old path part with the new one
-      return categoryPath.replace(oldPath, newPath);
+    // Check if path starts with old path followed by / (to avoid partial matches)
+    const oldPathWithSlash = oldPath + '/';
+    const newPathWithSlash = newPath + '/';
+
+    if (categoryPath.startsWith(oldPathWithSlash)) {
+      // Skip if already using new path (avoid double redirect)
+      if (categoryPath.startsWith(newPathWithSlash)) {
+        continue;
+      }
+      // Replace only the beginning part
+      return newPath + categoryPath.substring(oldPath.length);
     }
   }
 

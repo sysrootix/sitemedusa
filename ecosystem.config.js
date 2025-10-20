@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'frontend-dev',
+      name: 'frontend-dev-site',
       script: 'npm run dev',
       cwd: './frontend',
       instances: 1,
@@ -18,7 +18,7 @@ module.exports = {
       time: true
     },
     {
-      name: 'backend-dev',
+      name: 'backend-dev-site',
       script: 'npm run dev',
       cwd: './backend',
       instances: 1,

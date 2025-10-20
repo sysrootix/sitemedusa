@@ -117,6 +117,14 @@ const CatalogHierarchicalV2 = () => {
       setSelectedProductSlug(null);
       setShowProductModal(true);
     }
+    // Check for old product URL without pid (search by slug)
+    else if (productSlug) {
+      // Old URL format - try to find product by slug
+      console.log('🔍 Old product URL detected, searching by slug:', productSlug);
+      setSelectedProductSlug(productSlug);
+      setSelectedProductId(null);
+      setShowProductModal(true);
+    }
     // Check for category path
     else if (categoryPath.length > 0) {
       setCurrentCategoryPath(categoryPath.join('/'));
@@ -141,14 +149,14 @@ const CatalogHierarchicalV2 = () => {
     const params = new URLSearchParams(location.search);
     const productIdParam = params.get('pid');
     const legacyProductParam = params.get('product');
-    
+
     // Update category if URL changed
     const newCategoryPath = categoryPath.length > 0 ? categoryPath.join('/') : null;
     if (newCategoryPath !== currentCategoryPath) {
       setCurrentCategoryPath(newCategoryPath);
     }
-    
-    // Update product modal if URL changed (new format)
+
+    // Update product modal if URL changed (new format with pid)
     if (productSlug && productIdParam) {
       if (productIdParam !== selectedProductId) {
         setSelectedProductId(productIdParam);
@@ -156,11 +164,20 @@ const CatalogHierarchicalV2 = () => {
         setShowProductModal(true);
       }
     }
-    // Support legacy format
+    // Support legacy format (?product=uuid)
     else if (legacyProductParam) {
       if (legacyProductParam !== selectedProductId) {
         setSelectedProductId(legacyProductParam);
         setSelectedProductSlug(null);
+        setShowProductModal(true);
+      }
+    }
+    // Old product URL without pid (search by slug)
+    else if (productSlug) {
+      if (productSlug !== selectedProductSlug) {
+        console.log('🔍 Old product URL detected in sync, searching by slug:', productSlug);
+        setSelectedProductSlug(productSlug);
+        setSelectedProductId(null);
         setShowProductModal(true);
       }
     }

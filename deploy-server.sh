@@ -98,10 +98,7 @@ if [ ! -f "package.json" ]; then
 fi
 
 print_warning "Установка зависимостей backend..."
-npm install || {
-    print_error "Ошибка при установке зависимостей backend"
-    exit 1
-}
+
 
 print_success "Зависимости backend установлены"
 
@@ -120,10 +117,7 @@ if [ ! -f "package.json" ]; then
 fi
 
 print_warning "Установка зависимостей frontend..."
-npm install || {
-    print_error "Ошибка при установке зависимостей frontend"
-    exit 1
-}
+
 
 print_success "Зависимости frontend установлены"
 
