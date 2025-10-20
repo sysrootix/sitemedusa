@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import CatalogHierarchicalV2 from './CatalogHierarchicalV2';
 import ProductPage from './ProductPage';
 import SkeletonLoader from '../components/SkeletonLoader';
-import NotFound from './NotFound';
 import api from '../services/api';
 import type { ProductDetailsData } from '../hooks/useProductDetails';
 import { parseProductUrl } from '../utils/catalogUrl';
 
 const CatalogRouter = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [{ state, product, slug }, setRouteState] = useState<{
     state: 'category' | 'product' | 'loading' | 'not_found';
     product: ProductDetailsData | null;
@@ -53,6 +53,13 @@ const CatalogRouter = () => {
     };
   }, [productSlug, location.pathname]);
 
+  useEffect(() => {
+    if (state === 'not_found') {
+      const categoryPathOnly = categoryPath.length > 0 ? `/catalog/${categoryPath.join('/')}` : '/catalog';
+      navigate(categoryPathOnly, { replace: true });
+    }
+  }, [state, categoryPath, navigate]);
+
   if (state === 'loading') {
     return (
       <div className="py-16 flex justify-center">
@@ -69,10 +76,6 @@ const CatalogRouter = () => {
         initialProduct={product}
       />
     );
-  }
-
-  if (state === 'not_found') {
-    return <NotFound />;
   }
 
   return <CatalogHierarchicalV2 />;
