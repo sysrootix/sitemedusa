@@ -328,6 +328,15 @@ class ApiService {
 
         // Handle 401 errors (Unauthorized)
         if (error.response?.status === 401) {
+          const requestMethod = (error.config?.method || 'get').toUpperCase();
+          const requestUrl = (error.config?.url || '').replace(this.baseURL || '', '');
+          const normalizedUrlRaw = requestUrl.startsWith('http') ? new URL(requestUrl).pathname : requestUrl;
+          const normalizedUrl = normalizedUrlRaw.startsWith('/') ? normalizedUrlRaw : `/${normalizedUrlRaw}`;
+          const headers = (error.config?.headers || {}) as Record<string, string>;
+          const skipAuthModalHeader = headers['X-Skip-Auth-Modal'] === 'true' || headers['x-skip-auth-modal'] === 'true';
+          const skipAuthModalPaths = ['/auth/verify', '/auth/me'];
+          const skipAuthModal = skipAuthModalHeader || skipAuthModalPaths.some(path => normalizedUrl.startsWith(path));
+
           // If token is expired, try to refresh
           if (error.response?.data?.message?.includes('expired')) {
             try {
@@ -340,14 +349,17 @@ class ApiService {
             } catch (refreshError) {
               // Refresh failed, open auth modal
               this.clearTokens();
-              openAuthModalGlobal();
+              if (!skipAuthModal) {
+                openAuthModalGlobal();
+              }
               return Promise.reject(error);
             }
-          } else {
+          } else if (!skipAuthModal) {
             // For other 401 errors, open auth modal instead of showing toast
             openAuthModalGlobal();
-            return Promise.reject(error);
           }
+
+          return Promise.reject(error);
         }
 
         // Handle server errors (502, 503, 504, etc.)
@@ -460,7 +472,11 @@ class ApiService {
   }
 
   async verifyToken(): Promise<{ user: User; tokenExpiration: string | null }> {
-    const response = await this.api.get<ApiResponse<{ user: User; tokenExpiration: string | null }>>('/auth/verify');
+    const response = await this.api.get<ApiResponse<{ user: User; tokenExpiration: string | null }>>('/auth/verify', {
+      headers: {
+        'X-Skip-Auth-Modal': 'true',
+      },
+    });
     
     if (response.data.success && response.data.data) {
       return response.data.data;
