@@ -46,6 +46,10 @@ const ProductModal = ({
     setExpandedShops(new Set());
     setSelectedModifications({});
     setShowAllModifications({});
+
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }, [product?.product.id]);
 
   useEffect(() => {
@@ -273,141 +277,6 @@ const ProductModal = ({
             )}
 
             {/* Shops */}
-            {product.shops && product.shops.length > 0 && (
-              <div className="space-y-3 md:space-y-4">
-                <h3 className="text-base md:text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Store className="w-4 h-4" />
-                  Наличие в магазинах
-                </h3>
-                <div className="space-y-2 md:space-y-3">
-                  {product.shops.map((shop) => (
-                    <motion.div
-                      key={shop.shop_code}
-                      layout
-                      className="border border-gray-200 dark:border-gray-700 rounded-xl md:rounded-2xl bg-white dark:bg-gray-800 p-3 md:p-4 shadow-sm hover:shadow-md transition-all"
-                    >
-                      <div className="flex flex-col gap-3">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                          <div className="flex items-start gap-2">
-                            <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                              <Store className="w-4 h-4 md:w-5 md:h-5 text-gray-500 dark:text-gray-300" />
-                            </div>
-                            <div>
-                              <h4 className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">
-                                {shop.shop_name}
-                              </h4>
-                              <div className="flex items-center gap-1 text-xs md:text-sm text-gray-500 dark:text-gray-400">
-                                <MapPin className="w-3 h-3 md:w-4 md:h-4" />
-                                <span>{shop.city}, {shop.address}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 md:gap-3">
-                            <span className={`text-xs md:text-sm font-medium ${
-                              shop.available
-                                ? 'text-green-600 dark:text-green-400'
-                                : 'text-red-500 dark:text-red-400'
-                            }`}>
-                              {shop.available ? 'В наличии' : 'Нет в наличии'}
-                            </span>
-                            <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                              {shop.price ? `${Math.round(shop.price).toLocaleString('ru-RU')} ₽` : '—'}
-                            </span>
-                            <button
-                              onClick={() => toggleShopExpanded(shop.shop_code)}
-                              className="p-1 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                              aria-label={expandedShops.has(shop.shop_code) ? 'Скрыть подробности' : 'Показать подробности'}
-                            >
-                              {expandedShops.has(shop.shop_code) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                            </button>
-                          </div>
-                        </div>
-
-                        <motion.div
-                          initial={false}
-                          animate={{ height: expandedShops.has(shop.shop_code) ? 'auto' : 0, opacity: expandedShops.has(shop.shop_code) ? 1 : 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="pt-2 border-t border-gray-200 dark:border-gray-700 space-y-3">
-                            <div className="flex items-center justify-between text-xs md:text-sm">
-                              <div className="text-gray-600 dark:text-gray-400">
-                                Остаток:
-                                <span className={`ml-1 font-semibold ${
-                                  shop.quantity && shop.quantity > 0
-                                    ? 'text-green-600 dark:text-green-400'
-                                    : 'text-red-500 dark:text-red-400'
-                                }`}>
-                                  {shop.quantity ? Math.round(shop.quantity) : 0} шт.
-                                </span>
-                              </div>
-                              <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                                {shop.price ? `${Math.round(shop.price).toLocaleString('ru-RU')} ₽` : '—'}
-                              </div>
-                            </div>
-
-                            {shop.modifications && shop.modifications.length > 0 && (
-                              <div className="space-y-2">
-                                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                                  Варианты:
-                                </span>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                  {shop.modifications.map((mod: any) => (
-                                    <button
-                                      key={mod.id}
-                                      onClick={() => setSelectedModifications({
-                                        ...selectedModifications,
-                                        [shop.shop_code]: selectedModifications[shop.shop_code] === mod.id ? '' : mod.id,
-                                      })}
-                                      className={`px-3 py-2 rounded-lg border text-xs text-left transition-all ${
-                                        selectedModifications[shop.shop_code] === mod.id
-                                          ? 'border-gray-900 dark:border-white bg-gray-900/5 dark:bg-white/10 text-gray-900 dark:text-white'
-                                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 text-gray-600 dark:text-gray-300'
-                                      }`}
-                                    >
-                                      <div className="font-medium text-gray-900 dark:text-white">
-                                        {mod.name || 'Без названия'}
-                                      </div>
-                                      {mod.quanty !== undefined && (
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                          Остаток: {mod.quanty}
-                                        </div>
-                                      )}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            <button
-                              onClick={() => {
-                                const selectedModification = selectedModifications[shop.shop_code];
-                                if (shop.modifications && shop.modifications.length > 0 && !selectedModification) {
-                                  toast.error('Выберите вариант товара');
-                                  return;
-                                }
-
-                                addToCart(
-                                  product.product.id,
-                                  shop.shop_code,
-                                  shop.price || 0,
-                                  selectedModification,
-                                );
-                              }}
-                              className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white hover:bg-gray-800 transition-colors"
-                            >
-                              <ShoppingCart className="w-4 h-4" />
-                              <span>Добавить в корзину</span>
-                            </button>
-                          </div>
-                        </motion.div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Shop availability summary */}
             {product.shops && product.shops.length > 0 && (
               <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/40 rounded-xl border border-gray-200 dark:border-gray-700">
