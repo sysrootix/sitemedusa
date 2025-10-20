@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 import { customToast } from '@/utils/toast';
+import { openAuthModalGlobal } from '@/contexts/AuthModalContext';
 
 // API Response interface
 interface ApiResponse<T = unknown> {
@@ -325,19 +326,27 @@ class ApiService {
           return Promise.reject(error);
         }
 
-        // Handle token expiration
-        if (error.response?.status === 401 && error.response?.data?.message?.includes('expired')) {
-          try {
-            await this.refreshToken();
-            // Retry the original request
-            // Cookies with refreshed token will be sent automatically
-            if (error.config) {
-              return this.api.request(error.config);
+        // Handle 401 errors (Unauthorized)
+        if (error.response?.status === 401) {
+          // If token is expired, try to refresh
+          if (error.response?.data?.message?.includes('expired')) {
+            try {
+              await this.refreshToken();
+              // Retry the original request
+              // Cookies with refreshed token will be sent automatically
+              if (error.config) {
+                return this.api.request(error.config);
+              }
+            } catch (refreshError) {
+              // Refresh failed, open auth modal
+              this.clearTokens();
+              openAuthModalGlobal();
+              return Promise.reject(error);
             }
-          } catch (refreshError) {
-            // Refresh failed, redirect to login
-            this.clearTokens();
-            window.location.href = '/';
+          } else {
+            // For other 401 errors, open auth modal instead of showing toast
+            openAuthModalGlobal();
+            return Promise.reject(error);
           }
         }
 

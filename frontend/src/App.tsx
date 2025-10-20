@@ -19,6 +19,7 @@ import { AuthProvider } from './hooks/useAuth'
 import { HomeBlocksProvider } from './hooks/useHomeBlocks'
 import { CartProvider } from './contexts/CartContext'
 import { FavoritesProvider } from './contexts/FavoritesContext'
+import { AuthModalProvider } from './contexts/AuthModalContext'
 
 function LayoutWrapper() {
   return (
@@ -32,10 +33,11 @@ function LayoutWrapper() {
 function App() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <FavoritesProvider>
-          <HomeBlocksProvider>
-            <Routes>
+      <AuthModalProvider>
+        <CartProvider>
+          <FavoritesProvider>
+            <HomeBlocksProvider>
+              <Routes>
               <Route path="/auth/telegram-handler" element={<TelegramAuthHandler />} />
               <Route path="/" element={<LayoutWrapper />}>
                 <Route index element={<Home />} />
@@ -110,9 +112,10 @@ function App() {
               }}
               containerClassName="toast-container-minimal"
             />
-          </HomeBlocksProvider>
-        </FavoritesProvider>
-      </CartProvider>
+            </HomeBlocksProvider>
+          </FavoritesProvider>
+        </CartProvider>
+      </AuthModalProvider>
     </AuthProvider>
   )
 }
